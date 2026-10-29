@@ -1,0 +1,22 @@
+name: Observed capacity network contract
+on:
+  push:
+    paths:
+      - 'src/lut_to_pypsa/observed_network.py'
+      - 'src/lut_to_pypsa/capacity_inputs.py'
+      - 'tests/test_observed_network.py'
+      - '.github/workflows/observed-capacity-network.yml'
+  workflow_dispatch:
+jobs:
+  build-unsolved-network:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project
+        run: python -m pip install -e '.[dev]'
+      - name: Test observed-capacity network contract
+        run: python -m pytest -q tests/test_capacity_inputs.py tests/test_observed_network.py
