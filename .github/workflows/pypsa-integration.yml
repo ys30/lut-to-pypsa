@@ -1,0 +1,46 @@
+name: PyPSA integration
+on:
+  push:
+  pull_request:
+jobs:
+  solve-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project and HiGHS
+        run: python -m pip install -e '.[dev]'
+      - name: Run LUT conversion and PyPSA solver integration tests
+        run: python -m pytest -q tests/test_hourly.py tests/test_benchmark.py
+      - name: Run actual small PyPSA optimization and export results
+        run: |
+          mkdir -p outputs/ci
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          from lut_to_pypsa.hourly import build_load_network
+          from lut_to_pypsa.benchmark import solve_illustrative
+          snapshots=pd.date_range('2025-01-01',periods=24,freq='h')
+          hourly=pd.concat([
+              pd.DataFrame({'timestamp':snapshots,'region':region,'p_set_mw':mw})
+              for region,mw in [('Africa',10.0),('Europe',20.0)]
+          ],ignore_index=True)
+          network,summary=solve_illustrative(hourly)
+          assert len(network.snapshots)==24
+          assert len(network.generators)==4
+          assert summary.unserved_energy_mwh.abs().max()<1e-5
+          assert summary.balance_residual_mwh.abs().max()<1e-5
+          assert abs(summary.demand_mwh.sum()-720)<1e-5
+          summary.to_csv('outputs/ci/illustrative_dispatch_summary.csv',index=False)
+          network.export_to_netcdf('outputs/ci/illustrative_solved_network.nc')
+          print(summary.to_string(index=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: illustrative-pypsa-ci
+          path: outputs/ci/
+          if-no-files-found: ignore
