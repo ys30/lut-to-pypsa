@@ -40,7 +40,7 @@ def validate_capacity_inventory(inventory, mapping, demand_regions, year):
     if unknown:
         raise ValueError(f"Unknown LUT regions: {sorted(unknown)}")
     mapped = inventory.merge(mapping, on="source_region", how="left", validate="many_to_one")
-    mapped["capacity_mw"] = capacity.to_numpy() if len(mapped) == len(inventory) else mapped.capacity_mw
+    mapped["capacity_mw"] = pd.to_numeric(mapped.capacity_mw, errors="raise")
     summary = (mapped.groupby(["lut_region", "technology"], as_index=False)
                .agg(capacity_mw=("capacity_mw", "sum"),
                     plant_count=("plant_id", "nunique")))
