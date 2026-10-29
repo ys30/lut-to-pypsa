@@ -4,7 +4,7 @@
 
 A small, reproducible **electricity-only** portfolio project demonstrating how to validate tabular energy-system data, harmonize units, construct a PyPSA network, and distinguish input checks from optimization results.
 
-> **Data provenance and limitations:** All included data are **synthetic, illustrative LUT-style tables**, not an export from the LUT model. This project **does not demonstrate or claim real LUT–PyPSA data equivalence, model calibration, or cross-model validation**. An actual LUT adapter requires real source files, schema definitions, geographic and temporal semantics, and permission to use them.
+> **Data provenance and limitations:** The repository includes both **synthetic demonstration inputs** and a small, **source-cell-traced authentic LUT-DEMAND v1.1 annual electricity energy-service-demand fixture** (2020, five continents; `data/derived/lut_continents_2020_verified.csv`). The original workbook is not bundled. Hourly shapes, firm generation and shortage generators are illustrative assumptions, not observed data. This project does **not** establish LUT-ESTM/PyPSA output equivalence or calibration.
 
 ## What it does
 
@@ -154,3 +154,15 @@ Files: `scenario_comparison.csv`, `hourly_input_reconciliation.csv`, and `valida
 ## Authentic LUT-derived CI smoke test
 
 The PyPSA integration workflow now reads `data/derived/lut_continents_2020_verified.csv`, a **five-row excerpt of genuine LUT-DEMAND v1.1 cached 2020 electricity ESD values**, with original spreadsheet cell addresses (C11–C15). The test divides annual TWh by 8,784 hours to derive a **flat assumed 2020 hourly MW level**, then solves a 24-hour representative *smoke test*. It is **not a full-year simulation**: the 24-hour energy must equal 24/8,784 of the LUT annual total, not the whole annual total. The generator fleet, costs and isolated buses remain illustrative. CI artifacts are intended to contain the dispatch summary and NetCDF solved network. Passing this smoke test would validate PyPSA execution and energy balance only, **not agreement with LUT-ESTM**.
+
+
+## Assumption-based demand sensitivity scenarios
+
+The source-traced 2020 LUT-DEMAND fixture can be expanded into baseline, 0.9× and 1.1× annual demand scenarios. These multipliers are **researcher-selected sensitivity assumptions**, not new LUT model outputs, climate projections, or measured load profiles.
+
+```bash
+python -m lut_to_pypsa.scenarios data/derived/lut_continents_2020_verified.csv --output outputs/scenarios
+python -m pytest -q tests/test_scenarios.py tests/test_authentic_annual.py
+```
+
+Outputs: `scenario_regional_annual.csv` (source-cell provenance retained) and `scenario_annual_summary.csv` (regional sums by scenario/year). This module does not itself run a PyPSA dispatch or estimate system costs. The full-year 2020 conservation test covers 8,784 hours per region; the separate PyPSA CI optimization remains a 24-hour illustrative dispatch smoke test.
