@@ -179,3 +179,12 @@ python -m lut_to_pypsa.fixed_capacity data/derived/lut_continents_2020_verified.
 The exported `fixed_capacity_scenario_dispatch.csv` contains 20 rows (five continents × four scenarios), including `unserved_energy_mwh`, `unserved_share`, fixed capacity and illustrative dispatch cost. With a flat hourly load and a 10% baseline reserve margin, the 1.25× stress case implies 12% unmet demand by construction; this is a **software/assumption stress test**, not an empirical reliability estimate. The shortage generator is a mathematical feasibility slack and its penalty cost is not a calibrated value of lost load.
 
 The existing PyPSA integration workflow remains unchanged. The isolated `LUT fixed-capacity stress test` workflow tests this feature.
+
+
+## Observed-capacity network import (unsolved)
+
+`python -m lut_to_pypsa.observed_network DEMAND.csv INVENTORY.csv MAPPING.csv --output outputs/observed_capacity`
+
+The capacity inventory requires `plant_id,source_region,technology,capacity_mw,data_year,source_dataset,source_url`. The mapping requires `source_region,lut_region`; a **full** five-continent import additionally requires `complete_lut_region_coverage=true` for every mapping row, attesting that the source inventory is genuinely complete for that LUT region. An inventory covering only the United States must **never** be attested as complete for `Americas`. The explicit `--allow-partial` mode is for auditing and building a **partial, unsolved** network only; its results are not global.
+
+This workflow exports `observed_capacity_unsolved.nc`, `mapped_capacity_by_technology.csv`, and `capacity_coverage_audit.csv`. No observed-capacity optimization is run: technology-specific availability, costs, storage, transmission, and geographical comparability remain unresolved. A mapping hit alone does not establish completeness.
