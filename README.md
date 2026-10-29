@@ -137,3 +137,16 @@ python -m lut_to_pypsa.benchmark outputs/pypsa/pypsa_loads_flat_2020.csv --outpu
 ```
 
 The script solves PyPSA dispatch with HiGHS and writes `illustrative_dispatch_summary.csv` (demand, generation, shortage and balance residual) and `illustrative_solved_network.nc`. Integration tests need PyPSA and HiGHS. This does not constitute independent LUT-ESTM vs PyPSA model comparison: the supplied LUT-DEMAND workbook contains demand scenarios, not comparable optimized generation, capacity, cost or emissions outputs.
+
+## Scenario comparison and auditable validation manifest
+
+The `comparison.py` module compares the **same LUT-DEMAND quantity across years** (default 2020 vs 2050), retaining the original Excel cell addresses. It also rejects missing regional coverage and, when supplied an hourly CSV, checks complete hourly coverage, uniqueness, and annual-energy conservation.
+
+```bash
+python -m lut_to_pypsa.comparison outputs/lut/lut_continent_electricity_annual.csv \
+  --base-year 2020 --target-year 2050 \
+  --hourly-csv outputs/pypsa/pypsa_loads_flat_2020.csv \
+  --output outputs/comparison
+```
+
+Files: `scenario_comparison.csv`, `hourly_input_reconciliation.csv`, and `validation_manifest.json`. The manifest explicitly records that **LUT-ESTM vs PyPSA optimized output comparison has not been performed**. This is an intra-LUT demand-scenario comparison plus input-reconciliation audit, not independent cross-model validation.
