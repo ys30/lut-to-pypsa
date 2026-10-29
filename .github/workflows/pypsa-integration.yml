@@ -23,17 +23,17 @@ jobs:
           import pandas as pd
           from lut_to_pypsa.hourly import build_load_network
           from lut_to_pypsa.benchmark import solve_illustrative
-          snapshots=pd.date_range('2025-01-01',periods=24,freq='h')
+          snapshots=pd.date_range('2020-01-01',periods=24,freq='h')
           hourly=pd.concat([
               pd.DataFrame({'timestamp':snapshots,'region':region,'p_set_mw':mw})
               for region,mw in [('Africa',10.0),('Europe',20.0)]
           ],ignore_index=True)
           network,summary=solve_illustrative(hourly)
           assert len(network.snapshots)==24
-          assert len(network.generators)==4
+          assert len(network.generators)==10
           assert summary.unserved_energy_mwh.abs().max()<1e-5
           assert summary.balance_residual_mwh.abs().max()<1e-5
-          assert abs(summary.demand_mwh.sum()-720)<1e-5
+          assert abs(summary.demand_mwh.sum()-source.value_twh.sum()*1e6*24/8784)<1e-3
           summary.to_csv('outputs/ci/illustrative_dispatch_summary.csv',index=False)
           network.export_to_netcdf('outputs/ci/illustrative_solved_network.nc')
           print(summary.to_string(index=False))
@@ -41,6 +41,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: illustrative-pypsa-ci
+          name: authentic-lut-derived-24h-pypsa-ci
           path: outputs/ci/
           if-no-files-found: ignore
