@@ -1,6 +1,6 @@
-# LUT-to-PyPSA: Data Harmonization and Automated Validation
+# LUT-to-PyPSA: Energy Demand Scenario Integration and Validation
 
-[![Tests](https://github.com/ys30/lut-to-pypsa-validation/actions/workflows/tests.yml/badge.svg)](https://github.com/ys30/lut-to-pypsa-validation/actions/workflows/tests.yml)
+[![Tests](https://github.com/ys30/lut-to-pypsa/actions/workflows/tests.yml/badge.svg)](https://github.com/ys30/lut-to-pypsa/actions/workflows/tests.yml)
 
 A small, reproducible **electricity-only** portfolio project demonstrating how to validate tabular energy-system data, harmonize units, construct a PyPSA network, and distinguish input checks from optimization results.
 
