@@ -70,8 +70,14 @@ def compare_fixed_capacity(annual, multipliers=None, hours=24,
     return pd.DataFrame(records)
 
 
-def run(input_csv, output_dir, hours=24):
-    results = compare_fixed_capacity(pd.read_csv(input_csv), hours=hours)
+def run(input_csv, output_dir, hours=24, stress=1.25):
+    if not 1.1 < stress < 10:
+        raise ValueError('Stress multiplier must exceed 1.10 and be below 10')
+    results = compare_fixed_capacity(
+        pd.read_csv(input_csv),
+        multipliers={'low_demand': 0.9, 'high_demand': 1.1, 'stress': stress},
+        hours=hours,
+    )
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     results.to_csv(out / "fixed_capacity_scenario_dispatch.csv", index=False)
@@ -83,5 +89,6 @@ if __name__ == "__main__":
     parser.add_argument("input_csv")
     parser.add_argument("--output", default="outputs/fixed_capacity")
     parser.add_argument("--hours", type=int, default=24)
+    parser.add_argument('--stress', type=float, default=1.25)
     args = parser.parse_args()
-    print(run(args.input_csv, args.output, args.hours).to_string(index=False))
+    print(run(args.input_csv, args.output, args.hours, args.stress).to_string(index=False))
