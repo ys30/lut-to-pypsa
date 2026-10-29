@@ -14,7 +14,7 @@ jobs:
       - name: Install project and HiGHS
         run: python -m pip install -e '.[dev]'
       - name: Run LUT conversion and PyPSA solver integration tests
-        run: python -m pytest -q tests/test_hourly.py tests/test_benchmark.py tests/test_authentic_annual.py
+        run: python -m pytest -q tests/test_hourly.py tests/test_benchmark.py tests/test_authentic_annual.py tests/test_scenarios.py
       - name: Run actual small PyPSA optimization and export results
         run: |
           mkdir -p outputs/ci
