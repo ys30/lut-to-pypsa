@@ -1,0 +1,31 @@
+name: LUT scenario dispatch
+on:
+  push:
+    paths:
+      - 'src/lut_to_pypsa/scenario_dispatch.py'
+      - 'src/lut_to_pypsa/scenarios.py'
+      - 'tests/test_scenario_dispatch.py'
+      - '.github/workflows/lut-scenario-dispatch.yml'
+  workflow_dispatch:
+jobs:
+  scenario-dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PyPSA and HiGHS
+        run: python -m pip install -e '.[dev]'
+      - name: Test authentic LUT input scenario optimization
+        run: python -m pytest -q tests/test_scenario_dispatch.py
+      - name: Export three scenario dispatch summaries
+        run: |
+          python -m lut_to_pypsa.scenario_dispatch data/derived/lut_continents_2020_verified.csv --hours 24 --output outputs/scenario_dispatch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lut-2020-illustrative-scenario-dispatch
+          path: outputs/scenario_dispatch/
+          if-no-files-found: ignore
