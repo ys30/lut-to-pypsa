@@ -1,0 +1,6 @@
+region,year,value_twh,source_cell,quantity_kind
+Africa,2020,966.335736304755,C11,annual_energy_service_demand
+Asia,2020,11506.522192390665,C12,annual_energy_service_demand
+Australia / Oceania,2020,266.8127797497006,C13,annual_energy_service_demand
+Europe,2020,4138.233694940211,C14,annual_energy_service_demand
+Americas,2020,5609.752206059051,C15,annual_energy_service_demand
