@@ -40,7 +40,7 @@ def validate_hourly(annual, hourly, year):
         raise ValueError('Incorrect number of region-hour records')
     if hourly.duplicated(['timestamp','region']).any():
         raise ValueError('Duplicate region-hour records')
-    if set(timestamps.unique())!=set(expected):
+    if not pd.DatetimeIndex(timestamps.unique()).sort_values().equals(expected):
         raise ValueError('Missing or out-of-year snapshots')
     if not hourly.p_set_mw.map(lambda v: 0<=v<float('inf')).all():
         raise ValueError('Invalid hourly MW')
