@@ -18,7 +18,15 @@ def build_observed_capacity_network(annual, inventory, mapping, year=2020,
         raise ValueError("No demand for requested year")
     summary, coverage = validate_capacity_inventory(
         inventory, mapping, set(selected.region), year)
-    # A mapping hit is not evidence that the inventory covers the whole continent.\n    # Require an explicit completeness attestation for every mapped source region.\n    if not allow_partial:\n        if "complete_lut_region_coverage" not in mapping.columns:\n            raise ValueError("Incomplete geographic coverage: explicit completeness attestation required")\n        flags = mapping.complete_lut_region_coverage.map(\n            lambda value: value is True or str(value).strip().lower() == "true")\n        if not flags.all() or not coverage.capacity_inventory_covered.all():\n            raise ValueError("Incomplete geographic coverage; observed-capacity solve blocked")
+    # A mapping hit is not evidence that the inventory covers the whole continent.
+    # Require an explicit completeness attestation for every mapped source region.
+    if not allow_partial:
+        if "complete_lut_region_coverage" not in mapping.columns:
+            raise ValueError("Incomplete geographic coverage: explicit completeness attestation required")
+        flags = mapping.complete_lut_region_coverage.map(
+            lambda value: value is True or str(value).strip().lower() == "true")
+        if not flags.all() or not coverage.capacity_inventory_covered.all():
+            raise ValueError("Incomplete geographic coverage; observed-capacity solve blocked")
     if allow_partial:
         covered = set(coverage.loc[coverage.capacity_inventory_covered, "lut_region"])
         selected = selected[selected.region.isin(covered)]
