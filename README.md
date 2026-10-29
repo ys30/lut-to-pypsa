@@ -166,3 +166,16 @@ python -m pytest -q tests/test_scenarios.py tests/test_authentic_annual.py
 ```
 
 Outputs: `scenario_regional_annual.csv` (source-cell provenance retained) and `scenario_annual_summary.csv` (regional sums by scenario/year). This module does not itself run a PyPSA dispatch or estimate system costs. The full-year 2020 conservation test covers 8,784 hours per region; the separate PyPSA CI optimization remains a 24-hour illustrative dispatch smoke test.
+
+
+## Fixed-capacity stress-test output
+
+Unlike the earlier independently resized supply scenario, this experiment holds the **same baseline-derived illustrative firm capacity** across all demand scenarios. The CLI exports four scenarios: baseline (1.00×), low demand (0.90×), high demand (1.10×), and stress (1.25×).
+
+```bash
+python -m lut_to_pypsa.fixed_capacity data/derived/lut_continents_2020_verified.csv --hours 24 --stress 1.25 --output outputs/fixed_capacity
+```
+
+The exported `fixed_capacity_scenario_dispatch.csv` contains 20 rows (five continents × four scenarios), including `unserved_energy_mwh`, `unserved_share`, fixed capacity and illustrative dispatch cost. With a flat hourly load and a 10% baseline reserve margin, the 1.25× stress case implies 12% unmet demand by construction; this is a **software/assumption stress test**, not an empirical reliability estimate. The shortage generator is a mathematical feasibility slack and its penalty cost is not a calibrated value of lost load.
+
+The existing PyPSA integration workflow remains unchanged. The isolated `LUT fixed-capacity stress test` workflow tests this feature.
