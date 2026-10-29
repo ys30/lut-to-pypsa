@@ -24,9 +24,12 @@ jobs:
           from lut_to_pypsa.hourly import build_load_network
           from lut_to_pypsa.benchmark import solve_illustrative
           snapshots=pd.date_range('2020-01-01',periods=24,freq='h')
+          source=pd.read_csv('data/derived/lut_continents_2020_verified.csv')
+          assert len(source)==5 and source.value_twh.sum()>20000
           hourly=pd.concat([
-              pd.DataFrame({'timestamp':snapshots,'region':region,'p_set_mw':mw})
-              for region,mw in [('Africa',10.0),('Europe',20.0)]
+              pd.DataFrame({'timestamp':snapshots,'region':row.region,
+                            'p_set_mw':row.value_twh*1e6/8784})
+              for row in source.itertuples(index=False)
           ],ignore_index=True)
           network,summary=solve_illustrative(hourly)
           assert len(network.snapshots)==24
