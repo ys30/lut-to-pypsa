@@ -1,0 +1,21 @@
+name: Capacity data contract
+on:
+  push:
+    paths:
+      - 'src/lut_to_pypsa/capacity_inputs.py'
+      - 'tests/test_capacity_inputs.py'
+      - '.github/workflows/capacity-contract.yml'
+  workflow_dispatch:
+jobs:
+  validate-capacity-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project
+        run: python -m pip install -e '.[dev]'
+      - name: Validate inventory geography and provenance
+        run: python -m pytest -q tests/test_capacity_inputs.py
