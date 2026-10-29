@@ -36,7 +36,10 @@ jobs:
           assert len(network.generators)==2*len(source), f'generators={len(network.generators)}; regions={len(source)}'
           assert summary.unserved_energy_mwh.abs().max()<1e-5, summary.to_string(index=False)
           assert summary.balance_residual_mwh.abs().max()<1e-5, summary.to_string(index=False)
-          expected_mwh=source.value_twh.sum()*1e6*24/8784\n          actual_mwh=summary.demand_mwh.sum()\n          print(f'Expected 24h MWh: {expected_mwh:.9f}; actual: {actual_mwh:.9f}')\n          assert abs(actual_mwh-expected_mwh)<max(1e-3,expected_mwh*1e-9), f'actual={actual_mwh}, expected={expected_mwh}'
+          expected_mwh=source.value_twh.sum()*1e6*24/8784
+          actual_mwh=summary.demand_mwh.sum()
+          print(f'Expected 24h MWh: {expected_mwh:.9f}; actual: {actual_mwh:.9f}')
+          assert abs(actual_mwh-expected_mwh)<max(1e-3,expected_mwh*1e-9), f'actual={actual_mwh}, expected={expected_mwh}'
           summary.to_csv('outputs/ci/illustrative_dispatch_summary.csv',index=False)
           network.export_to_netcdf('outputs/ci/illustrative_solved_network.nc')
           print(summary.to_string(index=False))
