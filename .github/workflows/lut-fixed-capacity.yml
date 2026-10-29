@@ -1,0 +1,30 @@
+name: LUT fixed-capacity stress test
+on:
+  push:
+    paths:
+      - 'src/lut_to_pypsa/fixed_capacity.py'
+      - 'tests/test_fixed_capacity.py'
+      - '.github/workflows/lut-fixed-capacity.yml'
+  workflow_dispatch:
+jobs:
+  fixed-capacity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PyPSA and HiGHS
+        run: python -m pip install -e '.[dev]'
+      - name: Test fixed-capacity scenario optimization
+        run: python -m pytest -q tests/test_fixed_capacity.py
+      - name: Export fixed-capacity scenario results
+        run: |
+          python -m lut_to_pypsa.fixed_capacity data/derived/lut_continents_2020_verified.csv --hours 24 --output outputs/fixed_capacity
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lut-2020-fixed-capacity-stress-test
+          path: outputs/fixed_capacity/
+          if-no-files-found: ignore
