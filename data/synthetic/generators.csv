@@ -1,0 +1,7 @@
+generator,region,carrier,capacity_mw,marginal_cost_eur_mwh
+North_wind,North,wind,120,8
+North_gas,North,gas,150,65
+Central_wind,Central,wind,120,8
+Central_gas,Central,gas,150,65
+South_wind,South,wind,120,8
+South_gas,South,gas,150,65
