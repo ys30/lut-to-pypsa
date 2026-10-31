@@ -3,6 +3,7 @@
 Generator inventories are inputs, not proof of realistic hourly availability.
 """
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -57,6 +58,29 @@ def run(demand_csv, inventory_csv, mapping_csv, output_dir, year=2020,
     network.export_to_netcdf(out / "observed_capacity_unsolved.nc")
     summary.to_csv(out / "mapped_capacity_by_technology.csv", index=False)
     coverage.to_csv(out / "capacity_coverage_audit.csv", index=False)
+    manifest = {
+        "model": "lut-to-pypsa-observed-capacity-import",
+        "year": int(year),
+        "optimization_executed": False,
+        "calibrated": False,
+        "complete_geographic_coverage_attested": not allow_partial,
+        "partial_geography_allowed": bool(allow_partial),
+        "source_inventory_rows": int(len(inventory)),
+        "mapped_generator_capacity_mw": float(summary.capacity_mw.sum()),
+        "modeled_regions": sorted(map(str, network.buses.index)),
+        "demand_regions": sorted(map(str, annual.loc[annual.year == year, "region"])),
+        "inventory_covered_regions": sorted(
+            map(str, coverage.loc[coverage.capacity_inventory_covered, "lut_region"])
+        ),
+        "hourly_load_shape": "flat_assumption",
+        "generator_availability": "not_established",
+        "generator_marginal_cost": "placeholder_zero_not_for_optimization",
+        "transmission_topology": "not_established",
+        "lut_estm_output_equivalence": False,
+    }
+    (out / "network_scope_manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+    )
     return coverage
 
 
