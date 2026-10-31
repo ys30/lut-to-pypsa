@@ -188,3 +188,22 @@ The existing PyPSA integration workflow remains unchanged. The isolated `LUT fix
 The capacity inventory requires `plant_id,source_region,technology,capacity_mw,data_year,source_dataset,source_url`. The mapping requires `source_region,lut_region`; a **full** five-continent import additionally requires `complete_lut_region_coverage=true` for every mapping row, attesting that the source inventory is genuinely complete for that LUT region. An inventory covering only the United States must **never** be attested as complete for `Americas`. The explicit `--allow-partial` mode is for auditing and building a **partial, unsolved** network only; its results are not global.
 
 This workflow exports `observed_capacity_unsolved.nc`, `mapped_capacity_by_technology.csv`, and `capacity_coverage_audit.csv`. No observed-capacity optimization is run: technology-specific availability, costs, storage, transmission, and geographical comparability remain unresolved. A mapping hit alone does not establish completeness.
+
+
+## LUT technology-to-PyPSA mapping gate (audited, not solved)
+
+The module `src/lut_to_pypsa/technology_mapping.py` validates an **explicit, reviewed**
+technology mapping table with columns `lut_technology,pypsa_component,pypsa_carrier,mapping_basis,source_reference`.
+It rejects unmapped technologies, duplicate labels, unsupported PyPSA component
+types, and missing provenance. The inventory audit reports component-level
+capacity totals without constructing or optimizing storage/links.
+
+`python -m pytest -q tests/test_technology_mapping.py tests/test_lut_end_to_end_energy_conservation.py tests/test_observed_network_manifest.py`
+
+The observed-capacity network export also writes `network_scope_manifest.json`,
+marking incomplete geography, flat load-shape assumptions, missing operational
+parameters, and the **unsolved/uncalibrated** status. A validated mapping is not
+evidence of LUT-ESTM/PyPSA model equivalence. Historical EIA validation of
+the Western US remains in the separate
+[Energy-Transition-Analysis-PyPSA](https://github.com/ys30/Energy-Transition-Analysis-PyPSA)
+project.
