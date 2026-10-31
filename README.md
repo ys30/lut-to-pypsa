@@ -207,3 +207,19 @@ evidence of LUT-ESTM/PyPSA model equivalence. Historical EIA validation of
 the Western US remains in the separate
 [Energy-Transition-Analysis-PyPSA](https://github.com/ys30/Energy-Transition-Analysis-PyPSA)
 project.
+
+
+## Technology parameter gate (no optimization)
+
+`src/lut_to_pypsa/technology_parameters.py` checks provenance, capacity
+basis, data year, optional efficiency, availability, marginal/capital costs,
+and storage power duration before any network solve. It explicitly rejects
+negative capacities, out-of-range fractions, missing StorageUnit duration,
+and Store energy capacity expressed only in MW. All test values are fixtures,
+**not LUT technology parameters or calibrated empirical costs**.
+
+Run: `python -m pytest -q tests/test_technology_parameters.py`.
+
+Next: build source-reviewed LUT parameter tables with actual units and
+time/year comparability, then implement technology-specific PyPSA adapters
+and only then perform matched LUT/PyPSA model comparison.
