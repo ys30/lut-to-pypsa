@@ -79,7 +79,7 @@ def run(demand_csv, inventory_csv, mapping_csv, output_dir, year=2020,
         "lut_estm_output_equivalence": False,
     }
     (out / "network_scope_manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\\n", encoding="utf-8"
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return coverage
 
