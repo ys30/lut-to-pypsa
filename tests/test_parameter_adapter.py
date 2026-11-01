@@ -24,6 +24,7 @@ def fixture():
         "marginal_cost_eur_per_mwh": [1., 2.],
         "availability_fraction": [.25, 1.],
         "efficiency": [1., .9],
+        "efficiency_basis": ["per_direction", "per_direction"],
         "standing_loss_per_hour": [0., .01],
         "max_hours": [float("nan"), 4.],
     })
@@ -184,3 +185,22 @@ def test_storage_efficiency_is_per_direction_not_round_trip():
     assert storage.efficiency_store == pytest.approx(.9)
     assert storage.efficiency_dispatch == pytest.approx(.9)
     assert storage.efficiency_store * storage.efficiency_dispatch == pytest.approx(.81)
+
+
+def test_storage_round_trip_basis_is_converted_to_symmetric_efficiencies():
+    network, mapping, parameters = fixture()
+    parameters.loc[parameters.lut_technology.eq("battery"), "efficiency_basis"] = "round_trip"
+    result = attach_reviewed_components(
+        network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
+    )
+    storage = result.storage_units.loc["lut_battery"]
+    assert storage.efficiency_store * storage.efficiency_dispatch == pytest.approx(.9)
+
+
+def test_storage_rejects_missing_efficiency_basis():
+    network, mapping, parameters = fixture()
+    parameters = parameters.drop(columns="efficiency_basis")
+    with pytest.raises(ValueError, match="efficiency_basis"):
+        attach_reviewed_components(
+            network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
+        )
