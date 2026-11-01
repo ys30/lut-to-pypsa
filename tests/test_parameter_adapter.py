@@ -147,7 +147,7 @@ def test_empirical_mode_accepts_complete_attested_evidence():
     for item in parameters.to_dict("records"):
         for name in ("capacity_mw", "marginal_cost_eur_per_mwh",
                      "availability_fraction", "efficiency",
-                     "standing_loss_per_hour", "max_hours"):
+                     "standing_loss_per_hour", "max_hours", "efficiency_basis"):
             if pd.notna(item[name]):
                 rows.append({
                     "lut_technology": item["lut_technology"],
@@ -160,6 +160,7 @@ def test_empirical_mode_accepts_complete_attested_evidence():
                         "efficiency": "fraction",
                         "standing_loss_per_hour": "fraction/hour",
                         "max_hours": "hour",
+                        "efficiency_basis": "category",
                     }[name],
                     "source_document": "synthetic_test_document",
                     "source_location": "test fixture",
