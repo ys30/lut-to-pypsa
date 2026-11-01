@@ -1,0 +1,53 @@
+name: Five-region LUT illustrative acceptance
+
+on:
+  push:
+    paths:
+      - "src/lut_to_pypsa/**"
+      - "tests/test_five_region_pipeline.py"
+      - "data/derived/lut_continents_2020_verified.csv"
+      - ".github/workflows/five-region-acceptance.yml"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+jobs:
+  five-region:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package and solver
+        run: python -m pip install -e '.[dev]'
+      - name: Run five-region acceptance test
+        run: python -m pytest -q tests/test_five_region_pipeline.py tests/test_regional_dispatch.py
+      - name: Run full-year illustrative five-region solve
+        run: |
+          python -m lut_to_pypsa.five_region_pipeline \
+            --annual data/derived/lut_continents_2020_verified.csv \
+            --year 2020 \
+            --output outputs/five_region
+      - name: Check artifact existence and summary
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          p=Path("outputs/five_region")
+          audit=pd.read_csv(p/"regional_dispatch_audit.csv")
+          energy=pd.read_csv(p/"annual_energy_check.csv")
+          assert len(audit)==5 and len(energy)==5
+          assert set(audit.solver_status)=={"ok"}
+          assert set(audit.termination_condition)=={"optimal"}
+          assert audit.max_abs_balance_mw.max()<1e-5
+          assert energy.difference_mwh.abs().max()<0.01
+          assert (p/"illustrative_five_region_solved.nc").stat().st_size>0
+          print(audit.to_string(index=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: five-region-illustrative-results
+          path: outputs/five_region/
+          if-no-files-found: warn
