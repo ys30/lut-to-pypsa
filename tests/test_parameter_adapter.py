@@ -198,3 +198,12 @@ def test_storage_rejects_missing_efficiency_basis():
         attach_reviewed_components(
             network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
         )
+
+
+def test_storage_rejects_unknown_efficiency_basis():
+    network, mapping, parameters = fixture()
+    parameters.loc[parameters.lut_technology.eq("battery"), "efficiency_basis"] = "unspecified"
+    with pytest.raises(ValueError, match="efficiency_basis"):
+        attach_reviewed_components(
+            network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
+        )
