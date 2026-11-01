@@ -267,3 +267,28 @@ The repository does not yet contain a source-reviewed LUT technology
 parameter dataset. Example values in unit tests are synthetic fixtures.
 
 Run `python -m pytest -q tests/test_parameter_evidence.py`.
+
+
+## Dispatch accounting and verification scope
+
+The single-bus, generator-only illustrative dispatch audit checks **every snapshot**
+for supply-demand balance before aggregating energy. It applies PyPSA
+`snapshot_weightings.generators` to generation and demand energy (MWh), but
+`snapshot_weightings.objective` to marginal operating cost (EUR). These
+weighting columns may differ; mixing them would misstate costs. Missing,
+non-numeric, infinite or nonpositive snapshot weights are rejected.
+
+This audit deliberately does not cover storage, transmission, or sector coupling.
+The source-cell-traced LUT annual demand fixture is **not** a calibrated hourly
+generation fleet: the hourly profile and generation/cost assumptions remain
+illustrative. Passing synthetic dispatch tests must not be presented as
+empirical scenario validation.
+
+Run the dedicated audit regression tests with:
+
+```bash
+python -m pytest -q tests/test_illustrative_dispatch.py
+```
+
+The latest acceptance workflow also reruns these tests with verbose tracebacks
+on failure. GitHub Actions status must be checked independently of a commit.
