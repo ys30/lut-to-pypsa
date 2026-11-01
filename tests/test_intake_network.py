@@ -112,3 +112,26 @@ def test_cli_rejects_missing_solve_arguments_before_export(tmp_path):
               "--snapshots", str(snapshots), "--output", str(output),
               "--solve-illustrative"])
     assert not output.exists()
+
+
+def test_cli_exports_auditable_hourly_dispatch_csv(tmp_path):
+    from lut_to_pypsa.intake_network import main
+    parameters, evidence, mapping = write_intake(tmp_path)
+    buses, demand, snapshots = [tmp_path / name for name in
+                               ("buses.csv", "demand.csv", "snapshots.csv")]
+    times = pd.date_range("2020-01-01", periods=2, freq="h")
+    pd.DataFrame({"lut_technology": ["example_solar"], "bus": ["test"]}).to_csv(buses, index=False)
+    pd.DataFrame({"snapshot": times, "bus": ["test", "test"],
+                  "demand_mw": [2.0, 3.0]}).to_csv(demand, index=False)
+    pd.DataFrame({"snapshot": times}).to_csv(snapshots, index=False)
+    dispatch = tmp_path / "dispatch.csv"
+    main(["--parameters", str(parameters), "--evidence", str(evidence),
+          "--mapping", str(mapping), "--buses", str(buses),
+          "--snapshots", str(snapshots), "--demand", str(demand),
+          "--output", str(tmp_path / "network.nc"), "--solve-illustrative",
+          "--summary-json", str(tmp_path / "summary.json"),
+          "--dispatch-csv", str(dispatch)])
+    actual = pd.read_csv(dispatch)
+    assert list(actual.columns) == ["snapshot", "generator", "dispatch_mw"]
+    assert len(actual) == 2
+    assert actual.dispatch_mw.tolist() == pytest.approx([2.0, 3.0])
