@@ -103,6 +103,27 @@ jobs:
                   merged.expected_shortage_mwh).abs().max()<0.01
           print(audit.to_string(index=False))
           PY
+      - name: Publish acceptance summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import pandas as pd
+          summary = ["## Five-region LUT-to-PyPSA acceptance",
+                     "Supply is illustrative; LUT inputs are annual energy-service demand.",
+                     ""]
+          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv"):
+              path = Path("outputs/five_region") / name
+              if path.exists():
+                  frame = pd.read_csv(path)
+                  summary += [f"### {name}", f"Rows: {len(frame)}", "",
+                              frame.to_markdown(index=False), ""]
+              else:
+                  summary += [f"### {name}", "Not produced in this run.", ""]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write("\\n".join(summary) + "\\n")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
