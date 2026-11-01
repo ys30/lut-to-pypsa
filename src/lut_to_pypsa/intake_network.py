@@ -92,18 +92,20 @@ def main(argv=None):
         raise ValueError("Snapshot CSV must contain populated snapshot column")
     network = build_intake_network(args.parameters, args.evidence, args.mapping,
                                    args.buses, snapshots=times.snapshot, demand_path=args.demand)
+    if args.solve_illustrative and (args.demand is None or args.summary_json is None):
+        parser.error("--solve-illustrative requires --demand and --summary-json")
+    if not args.solve_illustrative and args.summary_json is not None:
+        parser.error("--summary-json requires --solve-illustrative")
     if args.solve_illustrative:
-        if args.demand is None or args.summary_json is None:
-            parser.error("--solve-illustrative requires --demand and --summary-json")
         network, status, condition = solve_illustrative_dispatch(network)
         summary = summarize_illustrative_dispatch(network)
         summary.update({"solver_status": status, "termination_condition": condition})
-        args.summary_json.parent.mkdir(parents=True, exist_ok=True)
-        args.summary_json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    elif args.summary_json is not None:
-        parser.error("--summary-json requires --solve-illustrative")
+    # Do not publish a successful summary unless the solved network export succeeds.
     args.output.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(args.output)
+    if args.solve_illustrative:
+        args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     scope = ("illustrative dispatch solved; source citations not independently verified."
              if args.solve_illustrative else
              "no optimization or independent source verification performed.")
