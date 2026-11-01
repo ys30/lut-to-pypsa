@@ -51,3 +51,17 @@ def test_reject_store_without_explicit_energy_capacity_contract():
     params.loc[1, "pypsa_component"] = "Store"
     with pytest.raises(ValueError, match="Store requires"):
         validate_technology_parameters(params, mapping)
+
+
+def test_storage_requires_reviewed_efficiency_at_intake():
+    mapping, params = fixtures()
+    params.loc[params.lut_technology.eq("battery"), "efficiency"] = float("nan")
+    with pytest.raises(ValueError, match="StorageUnit requires reviewed efficiency"):
+        validate_technology_parameters(params, mapping)
+
+
+def test_storage_round_trip_basis_is_accepted_at_intake():
+    mapping, params = fixtures()
+    params.loc[params.lut_technology.eq("battery"), "efficiency_basis"] = "round_trip"
+    result = validate_technology_parameters(params, mapping)
+    assert result.loc[result.lut_technology.eq("battery"), "efficiency_basis"].iloc[0] == "round_trip"
