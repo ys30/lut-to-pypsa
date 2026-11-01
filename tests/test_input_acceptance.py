@@ -74,5 +74,21 @@ def test_report_rejects_missing_pypsa_snapshot(monkeypatch):
 
     monkeypatch.setattr(acceptance, "build_load_network", truncated_network)
     annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
-    with pytest.raises(ValueError, match="Incomplete PyPSA hourly snapshots"):
+    with pytest.raises(ValueError, match="Incomplete or misaligned PyPSA hourly snapshots"):
+        acceptance.audit_lut_network_inputs(annual)
+
+
+@pytest.mark.parametrize("invalid", [-1.0, float("inf")])
+def test_report_rejects_nonphysical_pypsa_load(monkeypatch, invalid):
+    import lut_to_pypsa.input_acceptance as acceptance
+    original = acceptance.build_load_network
+
+    def corrupted_network(hourly):
+        network = original(hourly)
+        network.loads_t.p_set.iloc[0, 0] = invalid
+        return network
+
+    monkeypatch.setattr(acceptance, "build_load_network", corrupted_network)
+    annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
+    with pytest.raises(ValueError, match="Nonfinite or negative PyPSA hourly load"):
         acceptance.audit_lut_network_inputs(annual)
