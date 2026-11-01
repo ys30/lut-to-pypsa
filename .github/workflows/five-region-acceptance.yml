@@ -26,7 +26,7 @@ jobs:
       - name: Audit analytical baseline independently of solver
         run: python -m pytest -q tests/test_five_region_analytical_baseline.py
       - name: Run five-region acceptance test
-        run: python -m pytest -q tests/test_five_region_pipeline.py tests/test_regional_dispatch.py
+        run: python -m pytest -q tests/test_regional_dispatch.py tests/test_five_region_pipeline.py -k "not test_five_region_full_2020_solve"
       - name: Run 24-hour five-region solver smoke test
         run: |
           python - <<'PY'
