@@ -28,8 +28,24 @@ def test_negative_reserve_margin_rejected(tmp_path):
         run(source, tmp_path, year=2020, reserve_margin=-0.1)
 
 
-def test_reserve_margin_provenance_recorded(tmp_path):
+def test_reserve_margin_provenance_recorded_without_second_annual_solve(tmp_path):
+    """Reserve-margin behavior is tested on 24h rather than another 8784h solve."""
+    from lut_to_pypsa.hourly import hourly_flat, build_load_network
+    from lut_to_pypsa.benchmark import add_illustrative_supply
+    from lut_to_pypsa.regional_dispatch import solve_regional_dispatch
     source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
-    report = run(source, tmp_path, year=2020, reserve_margin=0.20)
-    assert (report.assumed_reserve_margin == 0.20).all()
-    assert (report.shortage_generation_mwh.abs() < 0.01).all()
+    hourly = hourly_flat(pd.read_csv(source), 2020)
+    day = hourly.loc[hourly.timestamp < pd.Timestamp("2020-01-02")]
+    network = add_illustrative_supply(build_load_network(day), reserve_margin=0.20)
+    assert all(network.generators.loc[
+        f"firm_{bus}", "p_nom"] == pytest.approx(
+        day.loc[day.region.eq(bus), "p_set_mw"].max() * 1.20
+    ) for bus in network.buses.index)
+    solved, report, status, condition = solve_regional_dispatch(network)
+    assert (status, condition) == ("ok", "optimal")
+    assert len(report) == 5
+    assert report.max_abs_balance_mw.max() < 1e-5
+    assert all(
+        solved.generators_t.p[f"shortage_{bus}"].abs().max() < 1e-5
+        for bus in solved.buses.index
+    )
