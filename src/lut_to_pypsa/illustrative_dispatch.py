@@ -59,6 +59,9 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     weights = network.snapshot_weightings["generators"].reindex(snapshots)
     if weights.isna().any() or (weights <= 0).any():
         raise ValueError("Invalid snapshot weights")
+    hourly_imbalance = dispatch.sum(axis=1) - demand.sum(axis=1)
+    if (hourly_imbalance.abs() > tolerance_mwh).any():
+        raise ValueError("Hourly dispatch energy imbalance")
     generation_mwh = float(dispatch.sum(axis=1).mul(weights).sum())
     demand_mwh = float(demand.sum(axis=1).mul(weights).sum())
     imbalance_mwh = generation_mwh - demand_mwh
