@@ -112,3 +112,21 @@ def test_reject_unrecognized_evidence_parameter():
     evidence.loc[0, "parameter_name"] = "unrecognized_parameter"
     with pytest.raises(ValueError, match="Unknown parameter evidence name"):
         validate_parameter_evidence(evidence)
+
+
+def test_reject_evidence_for_known_but_unrequested_parameter():
+    parameters, evidence = fixtures()
+    extra = evidence.iloc[:1].copy()
+    extra.loc[:, "parameter_name"] = "marginal_cost_eur_per_mwh"
+    extra.loc[:, "unit"] = "EUR/MWh"
+    with pytest.raises(ValueError, match="Unexpected parameter evidence"):
+        check_parameter_evidence_coverage(
+            parameters, pd.concat([evidence, extra], ignore_index=True)
+        )
+
+
+def test_reject_evidence_for_different_technology():
+    parameters, evidence = fixtures()
+    evidence.loc[0, "lut_technology"] = "wind"
+    with pytest.raises(ValueError, match="Missing source-checked parameter evidence"):
+        check_parameter_evidence_coverage(parameters, evidence)
