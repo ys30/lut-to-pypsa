@@ -133,6 +133,20 @@ jobs:
           print(comparison[["region", "shortage_fraction_solver",
                             "shortage_generation_mwh_solver"]].to_string(index=False))
           PY
+      - name: Render validated five-region result figures
+        run: |
+          python -m pip install matplotlib
+          python -m lut_to_pypsa.plot_five_region \
+            --base outputs/five_region \
+            --stress outputs/five_region_stress50 \
+            --output outputs/figures
+          python - <<'PY'
+          from pathlib import Path
+          figures = list(Path("outputs/figures").glob("five_region_*.png"))
+          assert len(figures) == 3
+          assert all(p.stat().st_size > 10000 for p in figures)
+          print([str(p) for p in figures])
+          PY
       - name: Publish acceptance summary
         if: always()
         run: |
@@ -161,4 +175,5 @@ jobs:
           path: |
             outputs/five_region/
             outputs/five_region_stress50/
+            outputs/figures/
           if-no-files-found: warn
