@@ -56,3 +56,29 @@ def test_intake_network_runs_fixed_capacity_dispatch(tmp_path):
     assert report["generation_mwh"] == pytest.approx(5.0)
     assert report["imbalance_mwh"] == pytest.approx(0.0, abs=1e-6)
     assert report["operating_cost_eur"] == pytest.approx(5.0)
+
+
+def test_intake_cli_writes_solved_netcdf_and_json(tmp_path):
+    """Exercise the actual CLI entrypoint and its two user-facing artifacts."""
+    import json
+    from lut_to_pypsa.intake_network import main
+    parameters, evidence, mapping = write_intake(tmp_path)
+    buses, demand, snapshots = [tmp_path / name for name in
+                               ("buses.csv", "demand.csv", "snapshots.csv")]
+    times = pd.date_range("2020-01-01", periods=2, freq="h")
+    pd.DataFrame({"lut_technology": ["example_solar"], "bus": ["test"]}).to_csv(buses, index=False)
+    pd.DataFrame({"snapshot": times, "bus": ["test", "test"],
+                  "demand_mw": [2.0, 3.0]}).to_csv(demand, index=False)
+    pd.DataFrame({"snapshot": times}).to_csv(snapshots, index=False)
+    output, summary_path = tmp_path / "network.nc", tmp_path / "summary.json"
+    main(["--parameters", str(parameters), "--evidence", str(evidence),
+          "--mapping", str(mapping), "--buses", str(buses),
+          "--snapshots", str(snapshots), "--demand", str(demand),
+          "--output", str(output), "--solve-illustrative",
+          "--summary-json", str(summary_path)])
+    assert output.is_file() and output.stat().st_size > 0
+    report = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert report["solver_status"] == "ok"
+    assert report["termination_condition"] == "optimal"
+    assert report["demand_mwh"] == pytest.approx(5.0)
+    assert report["operating_cost_eur"] == pytest.approx(5.0)
