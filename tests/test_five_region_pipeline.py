@@ -49,3 +49,11 @@ def test_reserve_margin_provenance_recorded_without_second_annual_solve(tmp_path
         solved.generators_t.p[f"shortage_{bus}"].abs().max() < 1e-5
         for bus in solved.buses.index
     )
+
+
+@pytest.mark.parametrize("factor", [-0.1, 1.1, float("nan"), float("inf")])
+def test_invalid_capacity_factor_fails_before_expanding_hourly_load(tmp_path, factor):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    with pytest.raises(ValueError, match="Invalid firm capacity factor"):
+        run(source, tmp_path, year=2020, firm_capacity_factor=factor)
+    assert not list(tmp_path.iterdir())
