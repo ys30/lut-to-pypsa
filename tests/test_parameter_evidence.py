@@ -61,7 +61,7 @@ def test_reject_evidence_for_unrequested_parameter():
     parameters, evidence = fixtures()
     extra = evidence.iloc[:1].copy()
     extra.loc[:, "parameter_name"] = "unrequested_cost"
-    with pytest.raises(ValueError, match="Unexpected parameter evidence"):
+    with pytest.raises(ValueError, match="Unknown parameter evidence name"):
         check_parameter_evidence_coverage(
             parameters, pd.concat([evidence, extra], ignore_index=True)
         )
