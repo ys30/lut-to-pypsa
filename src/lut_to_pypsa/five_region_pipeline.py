@@ -20,6 +20,7 @@ def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10):
     report["solver_status"] = status
     report["termination_condition"] = condition
     report["supply_provenance"] = "assumed_firm_and_shortage_generators"
+    report["assumed_reserve_margin"] = reserve_margin
     weights = solved.snapshot_weightings["generators"].reindex(solved.snapshots)
     dispatch = solved.generators_t.p.reindex(index=solved.snapshots)
     for kind in ("firm", "shortage"):
@@ -51,8 +52,11 @@ def main(argv=None):
     parser.add_argument("--annual", type=Path, default=Path("data/derived/lut_continents_2020_verified.csv"))
     parser.add_argument("--output", type=Path, default=Path("outputs/five_region"))
     parser.add_argument("--year", type=int, default=2020)
+    parser.add_argument("--reserve-margin", type=float, default=0.10,
+                        help="Illustrative firm capacity margin above each region peak")
     args = parser.parse_args(argv)
-    print(run(args.annual, args.output, year=args.year).to_string(index=False))
+    print(run(args.annual, args.output, year=args.year,
+              reserve_margin=args.reserve_margin).to_string(index=False))
 
 
 if __name__ == "__main__":
