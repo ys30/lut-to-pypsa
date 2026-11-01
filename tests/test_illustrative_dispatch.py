@@ -55,3 +55,17 @@ def test_dispatch_audit_rejects_storage_scope():
     network.add("StorageUnit", "battery", bus="test", p_nom=1.0, max_hours=2.0)
     with pytest.raises(ValueError, match="generator-only"):
         summarize_illustrative_dispatch(network)
+
+
+def test_dispatch_audit_combines_static_and_hourly_loads():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=3, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "constant", bus="test", p_set=4.0)
+    network.add("Load", "varying", bus="test", p_set=pd.Series([2.0, 3.0, 4.0], index=network.snapshots))
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    report = summarize_illustrative_dispatch(solved)
+    assert report["demand_mwh"] == pytest.approx(21.0)
+    assert report["generation_mwh"] == pytest.approx(21.0)
+    assert report["operating_cost_eur"] == pytest.approx(105.0)
