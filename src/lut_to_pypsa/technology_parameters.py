@@ -34,6 +34,9 @@ def validate_technology_parameters(parameters, mapping):
         lambda x: math.isfinite(x) and x == int(x)
     ).all():
         raise ValueError("Invalid data year")
+    mapping_required = {"lut_technology", "pypsa_component"}
+    if not mapping_required.issubset(mapping.columns):
+        raise ValueError(f"Missing technology mapping columns: {sorted(mapping_required - set(mapping.columns))}")
     if mapping.empty or mapping[["lut_technology", "pypsa_component"]].isna().any().any():
         raise ValueError("Missing technology mapping value")
     if mapping.lut_technology.astype(str).str.strip().eq("").any():
