@@ -43,6 +43,17 @@ jobs:
           assert audit.max_abs_balance_mw.max()<1e-5
           assert energy.difference_mwh.abs().max()<0.01
           assert (p/"illustrative_five_region_solved.nc").stat().st_size>0
+          hourly=pd.read_csv(p/"lut_hourly_flat_loads.csv")
+          assert len(hourly)==8784*5
+          assert hourly.region.nunique()==5
+          assert hourly.timestamp.nunique()==8784
+          assert {"firm_generation_mwh", "shortage_generation_mwh",
+                  "shortage_fraction", "illustrative_dispatch_cost",
+                  "assumed_reserve_margin"}.issubset(audit)
+          assert (audit.firm_generation_mwh + audit.shortage_generation_mwh
+                  - audit.demand_mwh).abs().max()<0.01
+          assert audit.shortage_generation_mwh.abs().max()<0.01
+          assert audit.illustrative_dispatch_cost.notna().all()
           print(audit.to_string(index=False))
           PY
       - uses: actions/upload-artifact@v4
