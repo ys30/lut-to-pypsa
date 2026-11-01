@@ -3,6 +3,8 @@
 A URL or citation string is not independent verification of the numerical value.
 This gate rejects synthetic fixtures from being presented as empirical inputs.
 """
+import math
+
 import pandas as pd
 
 REQUIRED = {
@@ -30,11 +32,11 @@ def validate_parameter_evidence(evidence, *, require_source_checked=True):
     if require_source_checked and not evidence.evidence_status.eq("source_checked").all():
         raise ValueError("Non-source-checked parameters cannot enter empirical adapter")
     values = pd.to_numeric(evidence.parameter_value, errors="coerce")
-    if values.isna().any() or not values.map(lambda x: __import__("math").isfinite(x)).all():
+    if values.isna().any() or not values.map(lambda x: math.isfinite(x)).all():
         raise ValueError("Nonfinite parameter evidence")
     years = pd.to_numeric(evidence.source_year, errors="coerce")
     if years.isna().any() or not years.map(
-        lambda x: __import__("math").isfinite(x) and x == int(x)
+        lambda x: math.isfinite(x) and x == int(x)
     ).all():
         raise ValueError("Invalid evidence year")
     return evidence.copy()
@@ -54,6 +56,9 @@ def check_parameter_evidence_coverage(parameters, evidence):
     present = set(zip(validated.lut_technology, validated.parameter_name))
     if needed - present:
         raise ValueError(f"Missing source-checked parameter evidence: {sorted(needed - present)}")
+    unexpected = present - needed
+    if unexpected:
+        raise ValueError(f"Unexpected parameter evidence: {sorted(unexpected)}")
     for row in validated.to_dict("records"):
         key = (row["lut_technology"], row["parameter_name"])
         if key in needed:
