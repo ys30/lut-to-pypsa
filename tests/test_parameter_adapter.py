@@ -199,3 +199,15 @@ def test_storage_rejects_unknown_efficiency_basis():
         attach_reviewed_components(
             network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
         )
+
+
+def test_adapter_rejects_existing_component_name_collision():
+    network, mapping, parameters = fixture()
+    network.add("Generator", "lut_solar", bus="region_a", p_nom=1.0)
+    with pytest.raises(ValueError, match="component name collision"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+        )
+    assert network.generators.loc["lut_solar", "p_nom"] == pytest.approx(1.0)
+    assert network.storage_units.empty
