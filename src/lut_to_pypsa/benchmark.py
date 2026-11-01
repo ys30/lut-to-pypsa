@@ -8,15 +8,16 @@ import argparse
 import pandas as pd
 from .hourly import build_load_network
 
-def add_illustrative_supply(network, reserve_margin=0.10, firm_cost=50., shortage_cost=10000.):
-    if reserve_margin < 0 or firm_cost < 0 or shortage_cost <= firm_cost:
+def add_illustrative_supply(network, reserve_margin=0.10, firm_cost=50., shortage_cost=10000., firm_capacity_factor=1.0):
+    if (reserve_margin < 0 or firm_cost < 0 or shortage_cost <= firm_cost
+            or not 0 <= firm_capacity_factor <= 1):
         raise ValueError('Invalid reserve margin or costs')
     for load in network.loads.index:
         region=str(network.loads.at[load,'bus'])
         peak=float(network.loads_t.p_set[load].max())
         if not 0 <= peak < float('inf'):
             raise ValueError('Invalid peak demand')
-        network.add('Generator',f'firm_{region}',bus=region,p_nom=peak*(1+reserve_margin),
+        network.add('Generator',f'firm_{region}',bus=region,p_nom=peak*(1+reserve_margin)*firm_capacity_factor,
                     marginal_cost=firm_cost,carrier='illustrative_firm')
         network.add('Generator',f'shortage_{region}',bus=region,p_nom=peak,
                     marginal_cost=shortage_cost,carrier='illustrative_shortage')
