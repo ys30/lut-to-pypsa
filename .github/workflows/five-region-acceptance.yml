@@ -54,6 +54,14 @@ jobs:
                   - audit.demand_mwh).abs().max()<0.01
           assert audit.shortage_generation_mwh.abs().max()<0.01
           assert audit.illustrative_dispatch_cost.notna().all()
+          expected=pd.read_csv("data/derived/five_region_2020_analytical_expectations.csv")
+          merged=audit.merge(expected, left_on="region", right_on="region", validate="one_to_one")
+          assert len(merged)==5
+          assert (merged.demand_mwh-merged.expected_annual_mwh).abs().max()<0.01
+          assert (merged.illustrative_dispatch_cost-
+                  merged.expected_illustrative_cost_units).abs().max()<1.0
+          assert (merged.shortage_generation_mwh-
+                  merged.expected_shortage_mwh).abs().max()<0.01
           print(audit.to_string(index=False))
           PY
       - uses: actions/upload-artifact@v4
