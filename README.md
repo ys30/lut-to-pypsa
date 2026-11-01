@@ -30,6 +30,23 @@ The [successful GitHub Actions run #28](https://github.com/ys30/lut-to-pypsa/act
 
 Both cases use a **10% assumed firm capacity reserve margin**. In the stress case, firm availability equals `(1 + 0.10) × 0.5 = 0.55` of the constant hourly load, producing 45% shortage proxy generation **by construction**. This is a sensitivity of an illustrative, unconstrained firm-supply assumption—not an observed blackout estimate, regional climate vulnerability measure, or calibrated energy-system forecast. All five continents have the same modeled shortage fraction because they use identical stress factors and flat hourly profiles. Costs are illustrative objective units, not validated electricity-system expenditure. The five-region annual experiment is separate from the three-region, 24-hour synthetic tutorial described above.
 
+### Quick-look results (2020; illustrative supply assumptions)
+
+The plots below are backed by the [successful four-scenario PyPSA acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865). They are generated from the source-traced annual demand fixture, audited PyPSA dispatch results, and separately identified closed-form sensitivity calculations.
+
+| Continent | LUT demand (TWh) | Solved shortage proxy at 50% firm capacity (TWh) |
+| --- | ---: | ---: |
+| Asia | 11,506.52 | 5,177.93 |
+| Americas | 5,609.75 | 2,524.39 |
+| Europe | 4,138.23 | 1,862.21 |
+| Africa | 966.34 | 434.85 |
+| Australia / Oceania | 266.81 | 120.07 |
+| **Total** | **22,487.66** | **10,119.45** |
+
+**Interpretation:** With 10% assumed reserve margin, a 50% firm-capacity factor supplies 55% of a constant hourly load. The remaining 45% is represented by a deliberately high-cost *shortage proxy generator*. It is **not** observed unserved electricity or a real-world outage estimate.
+
+**Visuals:** The [downloadable, versioned results artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865/artifacts/13102418017) includes `five_region_annual_demand.png`, `five_region_stress50_dispatch.png`, and `five_region_capacity_sensitivity.png`, alongside the audited CSV outputs. GitHub Actions artifacts are retained temporarily; use the reproducible plotting command below to regenerate them after expiration.
+
 ### Verified visualization pipeline
 
 The [successful four-scenario visualization acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865) (commit `a3510a7b`) generated and validated three PNG figures directly from audited solver and analytical outputs, including **all four** full-year PyPSA sensitivity anchors. The [CI artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865/artifacts/13102418017) contains the figures and the underlying CSV/NetCDF files.
