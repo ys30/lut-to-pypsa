@@ -253,3 +253,17 @@ Run `python -m pytest -q tests/test_input_acceptance.py` for regression checks.
 **Scope:** source-traced 2020 annual electricity energy-service demand, with
 an assumed flat 8,784-hour profile. This is an input translation test only;
 it is not a technology-mix, cost, dispatch, or LUT-ESTM equivalence result.
+
+
+## Per-parameter empirical evidence gate
+
+`parameter_evidence.py` requires each technology/parameter pair to have
+an explicit value, unit, source document and location, year, geographic
+scope, and evidence status. The `source_checked` status is an **input
+attestation**, not independent proof of the source's quality. The audit
+rejects missing entries, mismatched numerical values, duplicate keys,
+and `synthetic_fixture` or `assumption` statuses in empirical mode.
+The repository does not yet contain a source-reviewed LUT technology
+parameter dataset. Example values in unit tests are synthetic fixtures.
+
+Run `python -m pytest -q tests/test_parameter_evidence.py`.
