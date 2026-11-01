@@ -32,7 +32,7 @@ Both cases use a **10% assumed firm capacity reserve margin**. In the stress cas
 
 ### Verified visualization pipeline
 
-The [successful figure-generation acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41351700293) (commit `de3535e7`) generated and validated three PNG figures directly from audited solver and analytical outputs. The [CI artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41351700293/artifacts/13101134627) contains the figures and the underlying CSV/NetCDF files.
+The [successful four-scenario visualization acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865) (commit `a3510a7b`) generated and validated three PNG figures directly from audited solver and analytical outputs, including **all four** full-year PyPSA sensitivity anchors. The [CI artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865/artifacts/13102418017) contains the figures and the underlying CSV/NetCDF files.
 
 | Figure in the downloadable CI artifact | Interpretation |
 | --- | --- |
@@ -95,11 +95,11 @@ Open `notebooks/01_explore_and_validate.ipynb`, then `notebooks/02_build_and_deb
 
 **Input vs. output:** `n.loads_t.p_set` is a model input. `n.generators_t.p` is a dispatch result and is normally absent before optimization; an empty dispatch table is not a missing-input error.
 
-**Geography:** Region IDs are illustrative and not real geographic boundaries. Each region is electrically isolated, so regional supply must cover regional demand.
+**Geography:** The synthetic tutorial uses illustrative region IDs, not real geographic boundaries. The separate five-continent pipeline uses authentic LUT continent labels, but **does not** model geographical transmission networks: each continental bus is electrically isolated and supply must balance demand locally.
 
-**Validation scope:** Tests establish internal consistency of the supplied *synthetic* schema, not physical realism, data lineage, equivalence of LUT and PyPSA concepts, or validity of optimization assumptions.
+**Validation scope:** Synthetic schema tests establish internal consistency; the separate source-traced five-continent workflow also verifies annual-to-hourly conservation and actual solver outputs against independent closed-form expectations. Neither validates physical realism, calibration, or equivalence of LUT and PyPSA concepts.
 
-**Temporal scope:** 24 hourly snapshots on a single synthetic day. Multi-year or investment-period support would require explicit snapshot weights, representative-period definitions, and investment-period handling.
+**Temporal scope:** The original synthetic tutorial uses 24 hourly snapshots on one day. The separate source-traced five-continent acceptance pipeline covers all 8,784 hourly snapshots of leap year 2020 using illustrative flat demand. Neither workflow supports validated multi-year investment periods; such support requires explicit snapshot weights, representative-period definitions, and investment-period handling.
 
 ## Adapting to real LUT data
 
