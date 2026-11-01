@@ -54,8 +54,8 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
                 raise ValueError("StorageUnit requires reviewed efficiency")
             if "standing_loss_per_hour" not in row or pd.isna(row["standing_loss_per_hour"]):
                 raise ValueError("StorageUnit requires reviewed standing loss")
-            # A single per-direction efficiency is applied twice in a cycle.
-            # Thus round-trip efficiency equals efficiency_store * efficiency_dispatch.
+            # Symmetric charge/discharge efficiencies are an explicit modeling
+            # assumption. Round-trip input is square-rooted for each direction.
             if "efficiency_basis" not in row or pd.isna(row["efficiency_basis"]):
                 raise ValueError("StorageUnit requires explicit efficiency_basis")
             basis = row["efficiency_basis"]
