@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def convert_hourly_loads(hourly, *, region_to_bus=None):
+def convert_hourly_loads(hourly, *, region_to_bus=None, expected_year=None):
     required = {"timestamp", "region", "p_set_mw"}
     if not required.issubset(hourly):
         raise ValueError("LUT hourly CSV requires timestamp,region,p_set_mw")
@@ -28,6 +28,13 @@ def convert_hourly_loads(hourly, *, region_to_bus=None):
         raise ValueError("Invalid LUT hourly demand")
     if out.duplicated(["snapshot", "bus"]).any():
         raise ValueError("Duplicate LUT hourly bus demand")
+    if expected_year is not None:
+        expected = pd.date_range(f"{expected_year}-01-01",
+                                 f"{expected_year + 1}-01-01", freq="h", inclusive="left")
+        actual = pd.DatetimeIndex(out.snapshot.unique()).sort_values()
+        if not actual.equals(expected):
+            raise ValueError(f"Expected complete hourly calendar for {expected_year}; "
+                             f"found {len(actual)} distinct snapshots, expected {len(expected)}")
     n_buses = out.bus.nunique()
     if out.groupby("snapshot").bus.nunique().ne(n_buses).any():
         raise ValueError("Incomplete regional coverage at some snapshots")
@@ -38,8 +45,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--hourly-lut", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--expected-year", type=int,
+                        help="Require all 8760/8784 hourly timestamps of the specified year")
     args = parser.parse_args(argv)
-    converted = convert_hourly_loads(pd.read_csv(args.hourly_lut))
+    converted = convert_hourly_loads(pd.read_csv(args.hourly_lut), expected_year=args.expected_year)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     converted.to_csv(args.output, index=False)
     print(f"Exported {len(converted)} hourly bus demand rows across {converted.bus.nunique()} regions")
