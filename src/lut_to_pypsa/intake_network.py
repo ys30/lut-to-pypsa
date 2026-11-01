@@ -12,6 +12,7 @@ import pypsa
 
 from .parameter_intake_cli import validate_intake
 from .illustrative_dispatch import solve_illustrative_dispatch, summarize_illustrative_dispatch
+from .regional_dispatch import solve_regional_dispatch
 from .parameter_adapter import attach_reviewed_components
 
 
@@ -84,15 +85,27 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--solve-illustrative", action="store_true",
                         help="Run only the supported synthetic single-bus generator-only dispatch")
+    parser.add_argument("--solve-regional", action="store_true",
+                        help="Solve disconnected generator-only regional buses (illustrative)")
+    parser.add_argument("--regional-summary-csv", type=Path,
+                        help="Regional hourly balance audit summary; requires --solve-regional")
     parser.add_argument("--dispatch-csv", type=Path,
                         help="Optional solved generator dispatch in long-form hourly MW CSV")
     parser.add_argument("--summary-json", type=Path,
                         help="Required with --solve-illustrative; write audited solve metrics")
     args = parser.parse_args(argv)
+    if args.solve_illustrative and args.solve_regional:
+        parser.error("Choose only one solve mode")
+    if args.solve_regional and (args.demand is None or args.regional_summary_csv is None):
+        parser.error("--solve-regional requires --demand and --regional-summary-csv")
+    if args.regional_summary_csv is not None and not args.solve_regional:
+        parser.error("--regional-summary-csv requires --solve-regional")
     if args.solve_illustrative and (args.demand is None or args.summary_json is None):
         parser.error("--solve-illustrative requires --demand and --summary-json")
-    if not args.solve_illustrative and (args.summary_json is not None or args.dispatch_csv is not None):
-        parser.error("--summary-json and --dispatch-csv require --solve-illustrative")
+    if args.summary_json is not None and not args.solve_illustrative:
+        parser.error("--summary-json requires --solve-illustrative")
+    if args.dispatch_csv is not None and not (args.solve_illustrative or args.solve_regional):
+        parser.error("--dispatch-csv requires a solve mode")
     times = pd.read_csv(args.snapshots)
     if "snapshot" not in times or times.empty:
         raise ValueError("Snapshot CSV must contain populated snapshot column")
@@ -102,18 +115,24 @@ def main(argv=None):
         network, status, condition = solve_illustrative_dispatch(network)
         summary = summarize_illustrative_dispatch(network)
         summary.update({"solver_status": status, "termination_condition": condition})
+    elif args.solve_regional:
+        network, regional_report, status, condition = solve_regional_dispatch(network)
     # Do not publish a successful summary unless the solved network export succeeds.
     args.output.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(args.output)
     if args.solve_illustrative:
         args.summary_json.parent.mkdir(parents=True, exist_ok=True)
         args.summary_json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-        if args.dispatch_csv is not None:
-            dispatch = network.generators_t.p.stack().rename("dispatch_mw").reset_index()
-            dispatch.columns = ["snapshot", "generator", "dispatch_mw"]
-            args.dispatch_csv.parent.mkdir(parents=True, exist_ok=True)
-            dispatch.to_csv(args.dispatch_csv, index=False)
-    scope = ("illustrative dispatch solved; source citations not independently verified."
+    if args.solve_regional:
+        args.regional_summary_csv.parent.mkdir(parents=True, exist_ok=True)
+        regional_report.to_csv(args.regional_summary_csv, index=False)
+    if args.dispatch_csv is not None:
+        dispatch = network.generators_t.p.stack().rename("dispatch_mw").reset_index()
+        dispatch.columns = ["snapshot", "generator", "dispatch_mw"]
+        args.dispatch_csv.parent.mkdir(parents=True, exist_ok=True)
+        dispatch.to_csv(args.dispatch_csv, index=False)
+    scope = ("illustrative regional dispatch solved; no transmission or source verification."
+             if args.solve_regional else "illustrative dispatch solved; source citations not independently verified."
              if args.solve_illustrative else
              "no optimization or independent source verification performed.")
     print(f"Exported {len(network.snapshots)} snapshots, {len(network.generators)} "
