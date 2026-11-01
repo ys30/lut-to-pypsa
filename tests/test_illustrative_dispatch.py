@@ -83,3 +83,15 @@ def test_dispatch_audit_respects_nonuniform_snapshot_weights():
     assert report["demand_mwh"] == pytest.approx(30.0)
     assert report["generation_mwh"] == pytest.approx(30.0)
     assert report["operating_cost_eur"] == pytest.approx(150.0)
+
+
+def test_dispatch_audit_rejects_canceling_hourly_imbalances():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    solved.generators_t.p.loc[:, "supply"] = [9.0, 11.0]
+    with pytest.raises(ValueError, match="Hourly dispatch energy imbalance"):
+        summarize_illustrative_dispatch(solved)
