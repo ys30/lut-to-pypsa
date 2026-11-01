@@ -146,3 +146,15 @@ def test_dispatch_audit_rejects_load_on_different_bus():
     network.loads.loc["demand", "bus"] = "nonexistent"
     with pytest.raises(ValueError, match="same bus"):
         summarize_illustrative_dispatch(network)
+
+
+def test_dispatch_audit_rejects_time_varying_marginal_costs():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0,
+                marginal_cost=pd.Series([5.0, 10.0], index=network.snapshots))
+    solved, _, _ = solve_illustrative_dispatch(network)
+    with pytest.raises(ValueError, match="Time-varying generator marginal costs"):
+        summarize_illustrative_dispatch(solved)
