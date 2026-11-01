@@ -21,6 +21,7 @@ EXPECTED_UNITS = {
     "efficiency": "fraction",
     "max_hours": "hour",
     "standing_loss_per_hour": "fraction/hour",
+    "efficiency_basis": "category",
 }
 
 
@@ -44,7 +45,11 @@ def validate_parameter_evidence(evidence, *, require_source_checked=True):
             raise ValueError(f"Incorrect unit for {row.parameter_name}: expected {expected_unit}")
     if require_source_checked and not evidence.evidence_status.eq("source_checked").all():
         raise ValueError("Non-source-checked parameters cannot enter empirical adapter")
-    values = pd.to_numeric(evidence.parameter_value, errors="coerce")
+    basis = evidence.loc[evidence.parameter_name.eq("efficiency_basis"), "parameter_value"]
+    if not basis.isin({"per_direction", "round_trip"}).all():
+        raise ValueError("Invalid storage efficiency basis evidence")
+    numeric_evidence = evidence.loc[~evidence.parameter_name.eq("efficiency_basis")]
+    values = pd.to_numeric(numeric_evidence.parameter_value, errors="coerce")
     if values.isna().any() or not values.map(lambda x: math.isfinite(x)).all():
         raise ValueError("Nonfinite parameter evidence")
     years = pd.to_numeric(evidence.source_year, errors="coerce")
@@ -60,7 +65,7 @@ def check_parameter_evidence_coverage(parameters, evidence):
     names = {
         "capacity_mw", "availability_fraction", "marginal_cost_eur_per_mwh",
         "efficiency", "max_hours", "standing_loss_per_hour",
-        "capital_cost_eur_per_mw_year",
+        "capital_cost_eur_per_mw_year", "efficiency_basis",
     }
     needed = set()
     for row in parameters.to_dict("records"):
@@ -77,6 +82,7 @@ def check_parameter_evidence_coverage(parameters, evidence):
         key = (row["lut_technology"], row["parameter_name"])
         if key in needed:
             supplied = parameters.loc[parameters.lut_technology.eq(row["lut_technology"]), row["parameter_name"]].iloc[0]
-            if float(supplied) != float(row["parameter_value"]):
+            if (str(supplied) != str(row["parameter_value"]) if row["parameter_name"] == "efficiency_basis"
+                    else float(supplied) != float(row["parameter_value"])):
                 raise ValueError(f"Evidence value mismatch: {key}")
     return True
