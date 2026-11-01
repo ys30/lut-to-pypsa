@@ -71,6 +71,8 @@ def validate_technology_parameters(parameters, mapping):
     if storage_rows.any():
         if "efficiency_basis" not in parameters or parameters.loc[storage_rows, "efficiency_basis"].isna().any():
             raise ValueError("StorageUnit requires efficiency_basis")
+    if storage_rows.any() and ("efficiency" not in parameters or parameters.loc[storage_rows, "efficiency"].isna().any()):
+        raise ValueError("StorageUnit requires reviewed efficiency")
     if "efficiency" in parameters:
         values = pd.to_numeric(parameters.efficiency, errors="raise")
         if (values.dropna() <= 0).any():
