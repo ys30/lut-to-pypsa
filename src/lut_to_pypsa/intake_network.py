@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 import pypsa
 
 from .parameter_intake_cli import validate_intake
@@ -35,13 +36,14 @@ def build_intake_network(parameters_path, evidence_path, mapping_path, buses_pat
     if set(buses.lut_technology) != set(parameters.lut_technology):
         raise ValueError("Technology bus mapping coverage mismatch")
     network = pypsa.Network()
-    times = pd.DatetimeIndex(pd.to_datetime(snapshots))
+    times = pd.DatetimeIndex(pd.to_datetime(snapshots, errors="raise", utc=True)).tz_convert(None)
     if len(times) == 0 or times.hasnans or not times.is_unique or not times.is_monotonic_increasing:
         raise ValueError("Snapshots must be nonempty, unique and ordered")
     network.set_snapshots(times)
     for bus in sorted(buses.bus.unique()):
         network.add("Bus", bus)
     bus_by_technology = dict(zip(buses.lut_technology, buses.bus))
+    # The evidence gate checks declared source metadata, not independent provenance.
     network = attach_reviewed_components(
         network, parameters, mapping, bus_by_technology, evidence=evidence, empirical=True
     )
@@ -52,7 +54,7 @@ def build_intake_network(parameters_path, evidence_path, mapping_path, buses_pat
             raise ValueError("Hourly demand requires snapshot,bus,demand_mw")
         if demand.empty or demand[list(required)].isna().any().any():
             raise ValueError("Missing hourly demand")
-        demand["snapshot"] = pd.to_datetime(demand["snapshot"])
+        demand["snapshot"] = pd.to_datetime(demand["snapshot"], errors="raise", utc=True).dt.tz_convert(None)
         if demand.duplicated(["snapshot", "bus"]).any():
             raise ValueError("Duplicate hourly bus demand")
         if set(demand.bus) != set(network.buses.index):
@@ -60,7 +62,7 @@ def build_intake_network(parameters_path, evidence_path, mapping_path, buses_pat
         if set(demand.snapshot) != set(times) or len(demand) != len(times) * len(network.buses):
             raise ValueError("Incomplete hourly bus demand coverage")
         values = pd.to_numeric(demand.demand_mw, errors="raise")
-        if not values.notna().all() or not (values >= 0).all() or not __import__("numpy").isfinite(values).all():
+        if not values.notna().all() or not (values >= 0).all() or not np.isfinite(values).all():
             raise ValueError("Invalid hourly demand MW")
         for bus in network.buses.index:
             series = demand.loc[demand.bus.eq(bus)].set_index("snapshot").demand_mw.reindex(times)
