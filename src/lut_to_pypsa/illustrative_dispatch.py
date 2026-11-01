@@ -34,6 +34,7 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     Snapshot weights are applied to energy and operating cost.
     """
     import pandas as pd
+    import numpy as np
 
     network = solved_network
     if network.loads.empty or network.generators.empty:
@@ -56,12 +57,12 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
         demand[name] = network.loads_t.p_set[name].reindex(snapshots)
     if demand.isna().any().any():
         raise ValueError("Missing hourly demand")
-    if not dispatch.apply(pd.to_numeric, errors="coerce").notna().all().all():
+    if not np.isfinite(dispatch.apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)).all():
         raise ValueError("Nonfinite generator dispatch")
-    if not demand.apply(pd.to_numeric, errors="coerce").notna().all().all():
+    if not np.isfinite(demand.apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)).all():
         raise ValueError("Nonfinite hourly demand")
     weights = network.snapshot_weightings["generators"].reindex(snapshots)
-    if weights.isna().any() or (weights <= 0).any():
+    if not np.isfinite(weights.to_numpy(dtype=float)).all() or (weights <= 0).any():
         raise ValueError("Invalid snapshot weights")
     hourly_imbalance = dispatch.sum(axis=1) - demand.sum(axis=1)
     if (hourly_imbalance.abs() > tolerance_mwh).any():
@@ -74,7 +75,10 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     marginal_cost = pd.to_numeric(network.generators.marginal_cost, errors="raise")
     if marginal_cost.isna().any():
         raise ValueError("Missing generator marginal cost")
-    operating_cost = float(dispatch.mul(marginal_cost, axis=1).sum(axis=1).mul(weights).sum())
+    objective_weights = network.snapshot_weightings["objective"].reindex(snapshots)
+    if not np.isfinite(objective_weights.to_numpy(dtype=float)).all() or (objective_weights <= 0).any():
+        raise ValueError("Invalid objective snapshot weights")
+    operating_cost = float(dispatch.mul(marginal_cost, axis=1).sum(axis=1).mul(objective_weights).sum())
     return {
         "demand_mwh": demand_mwh,
         "generation_mwh": generation_mwh,
