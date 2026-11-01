@@ -93,16 +93,16 @@ def main(argv=None):
         summary = summarize_illustrative_dispatch(network)
         summary.update({"solver_status": status, "termination_condition": condition})
         args.summary_json.parent.mkdir(parents=True, exist_ok=True)
-        args.summary_json.write_text(json.dumps(summary, indent=2) + "\\n", encoding="utf-8")
+        args.summary_json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     elif args.summary_json is not None:
         parser.error("--summary-json requires --solve-illustrative")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(args.output)
+    scope = ("illustrative dispatch solved; source citations not independently verified."
+             if args.solve_illustrative else
+             "no optimization or independent source verification performed.")
     print(f"Exported {len(network.snapshots)} snapshots, {len(network.generators)} "
-          f"generators and {len(network.storage_units)} storage units; "
-          ("illustrative dispatch solved; source citations not independently verified."
-           if args.solve_illustrative else
-           "no optimization or independent source verification performed."))
+          f"generators and {len(network.storage_units)} storage units; {scope}")
 
 
 if __name__ == "__main__":
