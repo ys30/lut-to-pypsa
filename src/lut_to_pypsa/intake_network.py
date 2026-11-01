@@ -84,13 +84,15 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--solve-illustrative", action="store_true",
                         help="Run only the supported synthetic single-bus generator-only dispatch")
+    parser.add_argument("--dispatch-csv", type=Path,
+                        help="Optional solved generator dispatch in long-form hourly MW CSV")
     parser.add_argument("--summary-json", type=Path,
                         help="Required with --solve-illustrative; write audited solve metrics")
     args = parser.parse_args(argv)
     if args.solve_illustrative and (args.demand is None or args.summary_json is None):
         parser.error("--solve-illustrative requires --demand and --summary-json")
-    if not args.solve_illustrative and args.summary_json is not None:
-        parser.error("--summary-json requires --solve-illustrative")
+    if not args.solve_illustrative and (args.summary_json is not None or args.dispatch_csv is not None):
+        parser.error("--summary-json and --dispatch-csv require --solve-illustrative")
     times = pd.read_csv(args.snapshots)
     if "snapshot" not in times or times.empty:
         raise ValueError("Snapshot CSV must contain populated snapshot column")
@@ -106,6 +108,11 @@ def main(argv=None):
     if args.solve_illustrative:
         args.summary_json.parent.mkdir(parents=True, exist_ok=True)
         args.summary_json.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        if args.dispatch_csv is not None:
+            dispatch = network.generators_t.p.stack().rename("dispatch_mw").reset_index()
+            dispatch.columns = ["snapshot", "generator", "dispatch_mw"]
+            args.dispatch_csv.parent.mkdir(parents=True, exist_ok=True)
+            dispatch.to_csv(args.dispatch_csv, index=False)
     scope = ("illustrative dispatch solved; source citations not independently verified."
              if args.solve_illustrative else
              "no optimization or independent source verification performed.")
