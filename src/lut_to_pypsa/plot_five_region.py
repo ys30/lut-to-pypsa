@@ -18,6 +18,9 @@ def plot_results(base_dir, stress_dir, output_dir):
     base = pd.read_csv(base_dir / "regional_dispatch_audit.csv").set_index("region")
     stress = pd.read_csv(stress_dir / "regional_dispatch_audit.csv").set_index("region")
     analytical = pd.read_csv(base_dir / "analytical_sensitivity.csv")
+    solved_sensitivity_path = base_dir / "solver_sensitivity_all_four.csv"
+    solved_sensitivity = (pd.read_csv(solved_sensitivity_path)
+                          if solved_sensitivity_path.exists() else None)
     if set(base.index) != set(stress.index) or len(base) != 5 or len(stress) != 5:
         raise ValueError("Expected identical five-region coverage")
     for frame in (base, stress):
@@ -62,10 +65,22 @@ def plot_results(base_dir, stress_dir, output_dir):
     ax.plot(sensitivity.assumed_firm_capacity_factor,
             100 * sensitivity.shortage_mwh / sensitivity.demand_mwh,
             marker="o", color="#4477AA", label="Closed-form expectation")
-    ax.scatter([1.0, 0.5],
-               [100 * base.shortage_generation_mwh.sum() / base.demand_mwh.sum(),
-                100 * stress.shortage_generation_mwh.sum() / stress.demand_mwh.sum()],
-               color="#CC6677", s=70, zorder=3, label="Full-year PyPSA solve")
+    if solved_sensitivity is not None:
+        if len(solved_sensitivity) != 20 or solved_sensitivity.region.nunique() != 5:
+            raise ValueError("Expected twenty region-scenario solver results")
+        points = (solved_sensitivity.groupby("capacity_factor", as_index=False)
+                  .agg(shortage=("shortage_generation_mwh_solver", "sum"),
+                       demand=("demand_mwh_solver", "sum")))
+        if set(points.capacity_factor) != {1.0, 0.75, 0.5, 0.25}:
+            raise ValueError("Incomplete annual solver sensitivity scenarios")
+        x = points.capacity_factor
+        y = 100 * points.shortage / points.demand
+    else:
+        x = [1.0, 0.5]
+        y = [100 * base.shortage_generation_mwh.sum() / base.demand_mwh.sum(),
+             100 * stress.shortage_generation_mwh.sum() / stress.demand_mwh.sum()]
+    ax.scatter(x, y, color="#CC6677", s=70, zorder=3,
+               label="Full-year PyPSA solve")
     ax.set(xlabel="Assumed firm-capacity factor", ylabel="Shortage proxy share (%)",
            title="Analytical sensitivity with independently solved anchors",
            ylim=(-3, 80))
