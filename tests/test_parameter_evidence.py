@@ -130,3 +130,17 @@ def test_reject_evidence_for_different_technology():
     evidence.loc[0, "lut_technology"] = "wind"
     with pytest.raises(ValueError, match="Missing source-checked parameter evidence"):
         check_parameter_evidence_coverage(parameters, evidence)
+
+
+def test_reject_duplicate_parameter_technology_before_evidence_matching():
+    parameters, evidence = fixtures()
+    duplicated = pd.concat([parameters, parameters], ignore_index=True)
+    with pytest.raises(ValueError, match="Duplicate parameter technology"):
+        check_parameter_evidence_coverage(duplicated, evidence)
+
+
+def test_reject_blank_parameter_technology_before_evidence_matching():
+    parameters, evidence = fixtures()
+    parameters.loc[0, "lut_technology"] = " "
+    with pytest.raises(ValueError, match="Blank parameter technology"):
+        check_parameter_evidence_coverage(parameters, evidence)
