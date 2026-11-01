@@ -63,3 +63,60 @@ def test_reject_unconventioned_capital_cost():
     with pytest.raises(ValueError, match="optimization-period convention"):
         attach_reviewed_components(
             network, parameters, mapping, {"solar": "region_a", "battery": "region_a"})
+
+
+def test_empirical_evidence_gate_rejects_unchecked_values():
+    network, mapping, parameters = fixture()
+    rows = []
+    for item in parameters.to_dict("records"):
+        for name in ("capacity_mw", "marginal_cost_eur_per_mwh",
+                     "availability_fraction", "efficiency",
+                     "standing_loss_per_hour", "max_hours"):
+            if pd.notna(item[name]):
+                rows.append({
+                    "lut_technology": item["lut_technology"],
+                    "parameter_name": name,
+                    "parameter_value": item[name],
+                    "unit": "fixture_unit",
+                    "source_document": "fixture_only",
+                    "source_location": "test",
+                    "source_year": 2020,
+                    "geographic_scope": "test",
+                    "evidence_status": "synthetic_fixture",
+                })
+    evidence = pd.DataFrame(rows)
+    with pytest.raises(ValueError, match="Non-source-checked"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+            evidence=evidence,
+        )
+
+
+def test_empirical_evidence_gate_rejects_value_mismatch():
+    network, mapping, parameters = fixture()
+    rows = []
+    for item in parameters.to_dict("records"):
+        for name in ("capacity_mw", "marginal_cost_eur_per_mwh",
+                     "availability_fraction", "efficiency",
+                     "standing_loss_per_hour", "max_hours"):
+            if pd.notna(item[name]):
+                rows.append({
+                    "lut_technology": item["lut_technology"],
+                    "parameter_name": name,
+                    "parameter_value": item[name],
+                    "unit": "fixture_unit",
+                    "source_document": "fixture_only",
+                    "source_location": "test",
+                    "source_year": 2020,
+                    "geographic_scope": "test",
+                    "evidence_status": "source_checked",
+                })
+    evidence = pd.DataFrame(rows)
+    evidence.loc[evidence.parameter_name.eq("capacity_mw"), "parameter_value"] += 1.
+    with pytest.raises(ValueError, match="Evidence value mismatch"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+            evidence=evidence,
+        )
