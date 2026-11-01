@@ -73,6 +73,8 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     generation_mwh = float(dispatch.sum(axis=1).mul(weights).sum())
     demand_mwh = float(demand.sum(axis=1).mul(weights).sum())
     imbalance_mwh = generation_mwh - demand_mwh
+    if not np.isfinite(generation_mwh) or not np.isfinite(demand_mwh) or not np.isfinite(imbalance_mwh):
+        raise ValueError("Nonfinite weighted dispatch energy")
     if abs(imbalance_mwh) > tolerance_mwh:
         raise ValueError(f"Dispatch energy imbalance: {imbalance_mwh} MWh")
     marginal_cost = pd.to_numeric(network.generators.marginal_cost, errors="raise")
