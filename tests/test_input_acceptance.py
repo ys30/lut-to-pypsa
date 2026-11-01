@@ -25,6 +25,10 @@ def test_authentic_2020_lut_input_acceptance(tmp_path):
     assert metadata["source_csv_sha256"] == hashlib.sha256(__import__("pathlib").Path(source).read_bytes()).hexdigest()
     manifest = json.loads((tmp_path / "lut_pypsa_input_manifest.json").read_text())
     assert manifest["hourly_profile"] == "flat_assumption"
+    assert manifest["handoff_contract"]["artifact_sha256"] == manifest["network_sha256"]
+    assert manifest["handoff_contract"]["snapshots"] == 8784
+    assert manifest["handoff_contract"]["load_power_unit"] == "MW"
+    assert manifest["handoff_contract"]["requires_explicit_geographic_mapping"] is True
 
 
 def test_reject_missing_source_cell():
