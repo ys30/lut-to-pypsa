@@ -33,6 +33,8 @@ def build_intake_network(parameters_path, evidence_path, mapping_path, buses_pat
         raise ValueError("Invalid technology bus mapping")
     if buses.bus.astype(str).str.strip().eq("").any():
         raise ValueError("Blank technology bus")
+    if buses.lut_technology.astype(str).str.strip().eq("").any():
+        raise ValueError("Blank technology name in bus mapping")
     if set(buses.lut_technology) != set(parameters.lut_technology):
         raise ValueError("Technology bus mapping coverage mismatch")
     network = pypsa.Network()
@@ -64,6 +66,8 @@ def build_intake_network(parameters_path, evidence_path, mapping_path, buses_pat
         values = pd.to_numeric(demand.demand_mw, errors="raise")
         if not values.notna().all() or not (values >= 0).all() or not np.isfinite(values).all():
             raise ValueError("Invalid hourly demand MW")
+        # Store the validated numeric values, not the original CSV strings.
+        demand["demand_mw"] = values.astype(float)
         for bus in network.buses.index:
             series = demand.loc[demand.bus.eq(bus)].set_index("snapshot").demand_mw.reindex(times)
             network.add("Load", f"load_{bus}", bus=bus, p_set=series)
