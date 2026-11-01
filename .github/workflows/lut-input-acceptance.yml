@@ -28,6 +28,11 @@ jobs:
       - name: Run storage parameter and evidence regression tests separately
         if: failure()
         run: python -m pytest -vv --tb=long tests/test_parameter_adapter.py tests/test_parameter_evidence.py tests/test_technology_parameters.py
+      - name: Run CSV-to-PyPSA-to-HiGHS integration acceptance
+        run: |
+          python -m pytest -q -vv --tb=short \\
+            tests/test_parameter_intake_cli.py \\
+            tests/test_intake_network.py
       - name: Export audited 2020 LUT numerical acceptance
         run: |
           python -m lut_to_pypsa.input_acceptance data/derived/lut_continents_2020_verified.csv --year 2020 --output outputs/lut_input_acceptance
