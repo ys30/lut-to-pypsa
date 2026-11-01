@@ -85,3 +85,10 @@ def test_reject_missing_mapping_columns_with_validation_error(missing_column):
     mapping = mapping.drop(columns=[missing_column])
     with pytest.raises(ValueError, match="Missing technology mapping columns"):
         validate_technology_parameters(params, mapping)
+
+
+def test_reject_blank_mapping_component():
+    mapping, params = fixtures()
+    mapping.loc[1, "pypsa_component"] = "  "
+    with pytest.raises(ValueError, match="Blank technology mapping component"):
+        validate_technology_parameters(params, mapping)
