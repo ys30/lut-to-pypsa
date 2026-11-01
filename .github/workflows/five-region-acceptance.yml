@@ -5,6 +5,7 @@ on:
     paths:
       - "src/lut_to_pypsa/**"
       - "tests/test_five_region_pipeline.py"
+      - "tests/test_five_region_analytical_baseline.py"
       - "data/derived/lut_continents_2020_verified.csv"
       - "data/derived/five_region_2020_analytical_expectations.csv"
       - ".github/workflows/five-region-acceptance.yml"
@@ -22,6 +23,8 @@ jobs:
           python-version: "3.11"
       - name: Install package and solver
         run: python -m pip install -e '.[dev]'
+      - name: Audit analytical baseline independently of solver
+        run: python -m pytest -q tests/test_five_region_analytical_baseline.py
       - name: Run five-region acceptance test
         run: python -m pytest -q tests/test_five_region_pipeline.py tests/test_regional_dispatch.py
       - name: Run full-year illustrative five-region solve
