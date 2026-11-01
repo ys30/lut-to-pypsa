@@ -1,3 +1,4 @@
+import hashlib
 import json
 import pandas as pd
 import pytest
@@ -20,6 +21,8 @@ def test_authentic_2020_lut_input_acceptance(tmp_path):
     assert (tmp_path / "lut_load_only.nc").exists()
     assert metadata["network_scope"] == "source_traced_load_only"
     assert metadata["network_artifact"] == "lut_load_only.nc"
+    assert metadata["network_sha256"] == hashlib.sha256((tmp_path / "lut_load_only.nc").read_bytes()).hexdigest()
+    assert metadata["source_csv_sha256"] == hashlib.sha256(__import__("pathlib").Path(source).read_bytes()).hexdigest()
     manifest = json.loads((tmp_path / "lut_pypsa_input_manifest.json").read_text())
     assert manifest["hourly_profile"] == "flat_assumption"
 
