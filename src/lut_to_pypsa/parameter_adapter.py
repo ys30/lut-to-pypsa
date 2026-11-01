@@ -27,6 +27,11 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
     if set(validated.lut_technology) != set(bus_by_technology):
         raise ValueError("Each mapped technology requires exactly one explicit bus")
     result = network.copy()
+    proposed_names = {"lut_" + str(name) for name in validated.lut_technology}
+    existing_names = set(result.generators.index) | set(result.storage_units.index)
+    collisions = proposed_names & existing_names
+    if collisions:
+        raise ValueError(f"Existing PyPSA component name collision: {sorted(collisions)}")
     for row in validated.to_dict("records"):
         technology = row["lut_technology"]
         bus = bus_by_technology[technology]
