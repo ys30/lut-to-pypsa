@@ -33,3 +33,22 @@ def test_regional_dispatch_rejects_interregional_link():
     network.add("Link", "transfer", bus0="a", bus1="b", p_nom=2)
     with pytest.raises(ValueError, match="excludes storage"):
         solve_regional_dispatch(network)
+
+
+def test_shortage_proxy_activates_when_firm_capacity_is_insufficient():
+    """A stressed scenario must show nonzero shortage-proxy dispatch."""
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Generator", "firm_test", bus="test", p_nom=5,
+                marginal_cost=50)
+    network.add("Generator", "shortage_test", bus="test", p_nom=10,
+                marginal_cost=10000)
+    network.add("Load", "load_test", bus="test", p_set=[8, 10])
+    solved, report, status, condition = solve_regional_dispatch(network)
+    assert (status, condition) == ("ok", "optimal")
+    assert solved.generators_t.p["firm_test"].tolist() == pytest.approx([5, 5])
+    assert solved.generators_t.p["shortage_test"].tolist() == pytest.approx([3, 5])
+    assert report.demand_mwh.iloc[0] == pytest.approx(18)
+    assert report.generation_mwh.iloc[0] == pytest.approx(18)
+    assert report.max_abs_balance_mw.max() < 1e-5
