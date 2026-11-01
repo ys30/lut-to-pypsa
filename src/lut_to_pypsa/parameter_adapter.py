@@ -26,9 +26,13 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
         check_parameter_evidence_coverage(validated, evidence)
     if set(validated.lut_technology) != set(bus_by_technology):
         raise ValueError("Each mapped technology requires exactly one explicit bus")
+    if len(network.snapshots) == 0:
+        raise ValueError("Technology attachment requires network snapshots")
     result = network.copy()
     proposed_names = {"lut_" + str(name) for name in validated.lut_technology}
-    existing_names = set(result.generators.index) | set(result.storage_units.index)
+    existing_names = (set(result.generators.index) | set(result.storage_units.index)
+                      | set(result.links.index) | set(result.stores.index)
+                      | set(result.loads.index) | set(result.buses.index))
     collisions = proposed_names & existing_names
     if collisions:
         raise ValueError(f"Existing PyPSA component name collision: {sorted(collisions)}")
