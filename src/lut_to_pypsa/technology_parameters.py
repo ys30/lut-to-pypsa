@@ -12,7 +12,7 @@ REQUIRED = {
 OPTIONAL = {
     "efficiency", "marginal_cost_eur_per_mwh",
     "capital_cost_eur_per_mw_year", "availability_fraction",
-    "max_hours", "standing_loss_per_hour",
+    "max_hours", "standing_loss_per_hour", "efficiency_basis",
 }
 
 
@@ -63,6 +63,14 @@ def validate_technology_parameters(parameters, mapping):
             and (upper is None or x <= upper)
         ).all():
             raise ValueError(f"Invalid numeric parameter: {field}")
+    if "efficiency_basis" in parameters:
+        basis = parameters["efficiency_basis"].dropna()
+        if not basis.isin({"per_direction", "round_trip"}).all():
+            raise ValueError("Invalid storage efficiency_basis")
+    storage_rows = parameters.pypsa_component.eq("StorageUnit")
+    if storage_rows.any():
+        if "efficiency_basis" not in parameters or parameters.loc[storage_rows, "efficiency_basis"].isna().any():
+            raise ValueError("StorageUnit requires efficiency_basis")
     if "efficiency" in parameters:
         values = pd.to_numeric(parameters.efficiency, errors="raise")
         if (values.dropna() <= 0).any():
