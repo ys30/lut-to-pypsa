@@ -14,7 +14,7 @@ def add_illustrative_supply(network, reserve_margin=0.10, firm_cost=50., shortag
                 (reserve_margin, firm_cost, shortage_cost, firm_capacity_factor))
             or reserve_margin < 0 or firm_cost < 0 or shortage_cost <= firm_cost
             or not 0 <= firm_capacity_factor <= 1):
-        raise ValueError('Invalid reserve margin or costs')
+        raise ValueError('Invalid reserve margin, costs, or firm capacity factor')
     for load in network.loads.index:
         region=str(network.loads.at[load,'bus'])
         peak=float(network.loads_t.p_set[load].max())
