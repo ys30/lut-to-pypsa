@@ -5,6 +5,7 @@ on:
     paths:
       - "src/lut_to_pypsa/**"
       - "tests/test_five_region_pipeline.py"
+      - "tests/test_regional_dispatch.py"
       - "tests/test_five_region_analytical_baseline.py"
       - "data/derived/lut_continents_2020_verified.csv"
       - "data/derived/five_region_2020_analytical_expectations.csv"
