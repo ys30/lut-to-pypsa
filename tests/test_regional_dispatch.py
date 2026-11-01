@@ -75,5 +75,5 @@ def test_invalid_firm_capacity_factor_rejected(factor):
     network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
     network.add("Bus", "test")
     network.add("Load", "load_test", bus="test", p_set=2)
-    with pytest.raises(ValueError, match="Invalid reserve margin or costs"):
+    with pytest.raises(ValueError, match="Invalid reserve margin, costs, or firm capacity factor"):
         add_illustrative_supply(network, firm_capacity_factor=factor)
