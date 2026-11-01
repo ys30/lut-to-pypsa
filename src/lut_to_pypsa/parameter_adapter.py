@@ -24,6 +24,10 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
         raise ValueError('Empirical mode requires source-checked parameter evidence')
     if evidence is not None:
         check_parameter_evidence_coverage(validated, evidence)
+    if not isinstance(bus_by_technology, dict):
+        raise ValueError("Bus mapping must be a technology-to-bus dictionary")
+    if any(not isinstance(bus, str) or not bus.strip() for bus in bus_by_technology.values()):
+        raise ValueError("Bus mapping contains blank or invalid bus identifier")
     if set(validated.lut_technology) != set(bus_by_technology):
         raise ValueError("Each mapped technology requires exactly one explicit bus")
     if len(network.snapshots) == 0:
