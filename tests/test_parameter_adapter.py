@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from lut_to_pypsa.parameter_adapter import attach_reviewed_components
+from lut_to_pypsa.parameter_evidence import EXPECTED_UNITS
 
 
 def fixture():
@@ -112,7 +113,7 @@ def test_empirical_evidence_gate_rejects_value_mismatch():
                     "lut_technology": item["lut_technology"],
                     "parameter_name": name,
                     "parameter_value": item[name],
-                    "unit": "fixture_unit",
+                    "unit": EXPECTED_UNITS[name],
                     "source_document": "fixture_only",
                     "source_location": "test",
                     "source_year": 2020,
