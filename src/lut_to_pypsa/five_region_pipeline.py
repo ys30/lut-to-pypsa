@@ -11,6 +11,8 @@ from .regional_dispatch import solve_regional_dispatch
 
 
 def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10, firm_capacity_factor=1.0):
+    if not 0 <= firm_capacity_factor <= 1 or pd.isna(firm_capacity_factor):
+        raise ValueError("Invalid firm capacity factor")
     annual = pd.read_csv(annual_csv)
     hourly = hourly_flat(annual, year)
     checks = check_energy_conservation(annual.loc[annual.year.eq(year)], hourly)
