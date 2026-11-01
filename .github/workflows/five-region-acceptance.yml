@@ -6,6 +6,7 @@ on:
       - "src/lut_to_pypsa/**"
       - "tests/test_five_region_pipeline.py"
       - "data/derived/lut_continents_2020_verified.csv"
+      - "data/derived/five_region_2020_analytical_expectations.csv"
       - ".github/workflows/five-region-acceptance.yml"
       - "pyproject.toml"
   workflow_dispatch:
