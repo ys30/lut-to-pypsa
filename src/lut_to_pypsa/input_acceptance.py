@@ -5,6 +5,7 @@ No dispatch is performed and no LUT-ESTM output equivalence is implied.
 """
 import argparse
 import json
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -31,7 +32,7 @@ def audit_lut_network_inputs(annual, year=2020, tolerance_mwh=0.01):
         raise ValueError("Duplicate LUT source cell")
     demand = pd.to_numeric(selected.value_twh, errors="coerce")
     if demand.isna().any() or not demand.map(
-        lambda value: __import__("math").isfinite(value) and value >= 0
+        lambda value: math.isfinite(value) and value >= 0
     ).all():
         raise ValueError("Invalid LUT annual demand")
     hourly = hourly_flat(annual, year)
@@ -39,16 +40,21 @@ def audit_lut_network_inputs(annual, year=2020, tolerance_mwh=0.01):
     expected_hours = len(pd.date_range(
         f"{year}-01-01", f"{year + 1}-01-01", freq="h", inclusive="left"
     ))
-    if len(network.snapshots) != expected_hours:
-        raise ValueError("Incomplete PyPSA hourly snapshots")
+    expected_index = pd.date_range(f"{year}-01-01", periods=expected_hours, freq="h")
+    if not network.snapshots.equals(expected_index):
+        raise ValueError("Incomplete or misaligned PyPSA hourly snapshots")
     if len(hourly) != expected_hours * len(selected):
         raise ValueError("Incomplete LUT hourly region coverage")
     if set(network.loads.bus) != set(selected.region):
         raise ValueError("PyPSA load bus coverage mismatch")
     if set(network.loads_t.p_set.columns) != set(network.loads.index):
         raise ValueError("PyPSA load time-series columns mismatch")
+    if not network.loads_t.p_set.index.equals(network.snapshots):
+        raise ValueError("PyPSA load timeline mismatch")
     if network.loads_t.p_set.isna().any().any():
         raise ValueError("Missing PyPSA hourly load")
+    if not network.loads_t.p_set.map(lambda value: math.isfinite(value) and value >= 0).all().all():
+        raise ValueError("Nonfinite or negative PyPSA hourly load")
     rows = []
     for item in selected.itertuples(index=False):
         expected = float(item.value_twh) * 1e6
