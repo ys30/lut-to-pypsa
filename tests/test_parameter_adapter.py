@@ -120,3 +120,41 @@ def test_empirical_evidence_gate_rejects_value_mismatch():
             {"solar": "region_a", "battery": "region_a"},
             evidence=evidence,
         )
+
+
+def test_empirical_mode_requires_evidence():
+    network, mapping, parameters = fixture()
+    with pytest.raises(ValueError, match="Empirical mode requires"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+            empirical=True,
+        )
+
+
+def test_empirical_mode_accepts_complete_attested_evidence():
+    network, mapping, parameters = fixture()
+    rows = []
+    for item in parameters.to_dict("records"):
+        for name in ("capacity_mw", "marginal_cost_eur_per_mwh",
+                     "availability_fraction", "efficiency",
+                     "standing_loss_per_hour", "max_hours"):
+            if pd.notna(item[name]):
+                rows.append({
+                    "lut_technology": item["lut_technology"],
+                    "parameter_name": name,
+                    "parameter_value": item[name],
+                    "unit": "test_only",
+                    "source_document": "synthetic_test_document",
+                    "source_location": "test fixture",
+                    "source_year": 2020,
+                    "geographic_scope": "synthetic_test",
+                    "evidence_status": "source_checked",
+                })
+    result = attach_reviewed_components(
+        network, parameters, mapping,
+        {"solar": "region_a", "battery": "region_a"},
+        evidence=pd.DataFrame(rows), empirical=True,
+    )
+    assert "lut_solar" in result.generators.index
+    assert "lut_battery" in result.storage_units.index
