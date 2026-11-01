@@ -55,3 +55,20 @@ def test_reject_duplicate_evidence():
     _, evidence = fixtures()
     with pytest.raises(ValueError, match="Duplicate parameter evidence"):
         validate_parameter_evidence(pd.concat([evidence, evidence.iloc[:1]]))
+
+
+def test_reject_evidence_for_unrequested_parameter():
+    parameters, evidence = fixtures()
+    extra = evidence.iloc[:1].copy()
+    extra.loc[:, "parameter_name"] = "unrequested_cost"
+    with pytest.raises(ValueError, match="Unexpected parameter evidence"):
+        check_parameter_evidence_coverage(
+            parameters, pd.concat([evidence, extra], ignore_index=True)
+        )
+
+
+def test_reject_nonfinite_evidence_value():
+    _, evidence = fixtures()
+    evidence.loc[0, "parameter_value"] = float("inf")
+    with pytest.raises(ValueError, match="Nonfinite parameter evidence"):
+        validate_parameter_evidence(evidence)
