@@ -92,3 +92,24 @@ def test_reject_blank_mapping_component():
     mapping.loc[1, "pypsa_component"] = "  "
     with pytest.raises(ValueError, match="Blank technology mapping component"):
         validate_technology_parameters(params, mapping)
+
+
+def test_reject_blank_parameter_technology_name():
+    mapping, params = fixtures()
+    params.loc[0, "lut_technology"] = "  "
+    with pytest.raises(ValueError, match="Blank parameter technology name"):
+        validate_technology_parameters(params, mapping)
+
+
+def test_reject_duplicate_parameter_column_names():
+    mapping, params = fixtures()
+    params.columns = list(params.columns[:-1]) + [params.columns[0]]
+    with pytest.raises(ValueError, match="Duplicate parameter or mapping column names"):
+        validate_technology_parameters(params, mapping)
+
+
+def test_reject_duplicate_mapping_column_names():
+    mapping, params = fixtures()
+    mapping.columns = ["lut_technology", "lut_technology"]
+    with pytest.raises(ValueError, match="Duplicate parameter or mapping column names"):
+        validate_technology_parameters(params, mapping)
