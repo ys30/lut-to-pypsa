@@ -18,6 +18,8 @@ jobs:
           cache: pip
       - name: Install project and test dependencies
         run: python -m pip install -e '.[dev]'
+      - name: Prepare CI output directory
+        run: mkdir -p outputs
       - name: Run LUT-to-PyPSA regression tests
         run: python -m pytest -q --tb=short -ra --junitxml=outputs/pytest-results.xml
       - name: Run storage parameter and evidence regression tests separately
