@@ -66,3 +66,14 @@ def test_capacity_derating_changes_shortage_dispatch():
     assert (status, condition) == ("ok", "optimal")
     assert solved.generators_t.p["shortage_test"].tolist() == pytest.approx([3, 5])
     assert report.max_abs_balance_mw.max() < 1e-5
+
+
+@pytest.mark.parametrize("factor", [-0.1, 1.1, float("nan"), float("inf")])
+def test_invalid_firm_capacity_factor_rejected(factor):
+    from lut_to_pypsa.benchmark import add_illustrative_supply
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "load_test", bus="test", p_set=2)
+    with pytest.raises(ValueError, match="Invalid reserve margin or costs"):
+        add_illustrative_supply(network, firm_capacity_factor=factor)
