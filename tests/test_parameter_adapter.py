@@ -211,3 +211,25 @@ def test_adapter_rejects_existing_component_name_collision():
         )
     assert network.generators.loc["lut_solar", "p_nom"] == pytest.approx(1.0)
     assert network.storage_units.empty
+
+
+def test_adapter_rejects_network_without_snapshots():
+    network, mapping, parameters = fixture()
+    network.set_snapshots(pd.DatetimeIndex([]))
+    with pytest.raises(ValueError, match="requires network snapshots"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+        )
+
+
+def test_adapter_rejects_cross_component_name_collision():
+    network, mapping, parameters = fixture()
+    network.add("Load", "lut_solar", bus="region_a", p_set=1.0)
+    with pytest.raises(ValueError, match="component name collision"):
+        attach_reviewed_components(
+            network, parameters, mapping,
+            {"solar": "region_a", "battery": "region_a"},
+        )
+    assert network.generators.empty
+    assert network.storage_units.empty
