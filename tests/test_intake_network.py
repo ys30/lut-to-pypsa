@@ -4,7 +4,7 @@ import pytest
 
 from lut_to_pypsa.intake_network import build_intake_network
 from lut_to_pypsa.illustrative_dispatch import solve_illustrative_dispatch, summarize_illustrative_dispatch
-from test_parameter_intake_cli import write_intake
+from tests.test_parameter_intake_cli import write_intake
 
 
 def test_reviewed_intake_builds_network_with_explicit_hourly_demand(tmp_path):
