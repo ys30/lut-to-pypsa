@@ -72,3 +72,10 @@ def test_reject_nonfinite_evidence_value():
     evidence.loc[0, "parameter_value"] = float("inf")
     with pytest.raises(ValueError, match="Nonfinite parameter evidence"):
         validate_parameter_evidence(evidence)
+
+
+def test_reject_wrong_physical_unit():
+    _, evidence = fixtures()
+    evidence.loc[0, "unit"] = "MWh"
+    with pytest.raises(ValueError, match="Incorrect unit"):
+        validate_parameter_evidence(evidence)
