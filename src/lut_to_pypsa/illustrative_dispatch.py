@@ -56,6 +56,10 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
         demand[name] = network.loads_t.p_set[name].reindex(snapshots)
     if demand.isna().any().any():
         raise ValueError("Missing hourly demand")
+    if not dispatch.apply(pd.to_numeric, errors="coerce").notna().all().all():
+        raise ValueError("Nonfinite generator dispatch")
+    if not demand.apply(pd.to_numeric, errors="coerce").notna().all().all():
+        raise ValueError("Nonfinite hourly demand")
     weights = network.snapshot_weightings["generators"].reindex(snapshots)
     if weights.isna().any() or (weights <= 0).any():
         raise ValueError("Invalid snapshot weights")
