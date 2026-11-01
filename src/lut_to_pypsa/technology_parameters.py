@@ -17,11 +17,17 @@ OPTIONAL = {
 
 
 def validate_technology_parameters(parameters, mapping):
+    if not parameters.columns.is_unique or not mapping.columns.is_unique:
+        raise ValueError("Duplicate parameter or mapping column names")
     missing = REQUIRED - set(parameters.columns)
     if missing:
         raise ValueError(f"Missing parameter fields: {sorted(missing)}")
     if parameters.empty or parameters[list(REQUIRED)].isna().any().any():
         raise ValueError("Missing mandatory parameter value")
+    if parameters.lut_technology.astype(str).str.strip().eq("").any():
+        raise ValueError("Blank parameter technology name")
+    if parameters.pypsa_component.astype(str).str.strip().eq("").any():
+        raise ValueError("Blank parameter component")
     if parameters.lut_technology.duplicated().any():
         raise ValueError("Duplicate technology parameter row")
     if parameters.capacity_basis.astype(str).str.strip().eq("").any():
