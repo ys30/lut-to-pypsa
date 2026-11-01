@@ -41,6 +41,8 @@ def validate_technology_parameters(parameters, mapping):
         raise ValueError("Missing technology mapping value")
     if mapping.lut_technology.astype(str).str.strip().eq("").any():
         raise ValueError("Blank technology mapping name")
+    if mapping.pypsa_component.astype(str).str.strip().eq("").any():
+        raise ValueError("Blank technology mapping component")
     expected = mapping[["lut_technology", "pypsa_component"]]
     if expected.lut_technology.duplicated().any():
         raise ValueError("Duplicate technology mapping")
