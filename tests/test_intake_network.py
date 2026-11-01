@@ -96,3 +96,19 @@ def test_intake_network_accepts_numeric_strings_and_utc_snapshots(tmp_path):
                                    snapshots=times, demand_path=demand)
     assert network.snapshots.tz is None
     assert list(network.loads_t.p_set["load_test"]) == pytest.approx([2.0, 3.0])
+
+
+def test_cli_rejects_missing_solve_arguments_before_export(tmp_path):
+    """Invalid CLI invocation must not create misleading output files."""
+    from lut_to_pypsa.intake_network import main
+    parameters, evidence, mapping = write_intake(tmp_path)
+    buses, snapshots = tmp_path / "buses.csv", tmp_path / "snapshots.csv"
+    pd.DataFrame({"lut_technology": ["example_solar"], "bus": ["test"]}).to_csv(buses, index=False)
+    pd.DataFrame({"snapshot": ["2020-01-01T00:00:00Z"]}).to_csv(snapshots, index=False)
+    output = tmp_path / "should_not_exist.nc"
+    with pytest.raises(SystemExit):
+        main(["--parameters", str(parameters), "--evidence", str(evidence),
+              "--mapping", str(mapping), "--buses", str(buses),
+              "--snapshots", str(snapshots), "--output", str(output),
+              "--solve-illustrative"])
+    assert not output.exists()
