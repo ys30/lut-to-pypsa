@@ -74,7 +74,7 @@ def test_dispatch_audit_combines_static_and_hourly_loads():
 def test_dispatch_audit_respects_nonuniform_snapshot_weights():
     network = pypsa.Network()
     network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
-    network.snapshot_weightings.loc[:, "generators"] = [1.0, 2.0]
+    network.snapshot_weightings["generators"] = pd.Series([1.0, 2.0], index=network.snapshots, dtype=float)
     network.add("Bus", "test")
     network.add("Load", "demand", bus="test", p_set=10.0)
     network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
