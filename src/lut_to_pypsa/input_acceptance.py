@@ -4,6 +4,7 @@ Compares source-traced annual demand with the actual PyPSA load matrix.
 No dispatch is performed and no LUT-ESTM output equivalence is implied.
 """
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -118,6 +119,8 @@ def run(source_csv, output_dir, year=2020):
     report.to_csv(out / "lut_pypsa_input_conservation.csv", index=False)
     export_accepted_load_network(annual, out / "lut_load_only.nc", year=year)
     metadata["network_artifact"] = "lut_load_only.nc"
+    metadata["network_sha256"] = hashlib.sha256((out / "lut_load_only.nc").read_bytes()).hexdigest()
+    metadata["source_csv_sha256"] = hashlib.sha256(Path(source_csv).read_bytes()).hexdigest()
     metadata["network_scope"] = "source_traced_load_only"
     (out / "lut_pypsa_input_manifest.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + chr(10), encoding="utf-8"
