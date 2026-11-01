@@ -91,6 +91,8 @@ observed hourly load shapes, calibration, or LUT-ESTM/PyPSA output equivalence.
 The 2020 source-traced NetCDF is a **load-only** artifact, while solved dispatch
 examples use explicitly illustrative capacity and cost assumptions.
 
+**Empirical parameter intake:** See [the auditable parameter intake specification](docs/empirical-parameter-intake.md) for required fields, per-value evidence, unit/currency checks, storage efficiency conventions, and the review-to-adapter sequence. This document is a collection and review contract, **not a populated or independently verified empirical parameter dataset**. The illustrative dispatch helper is limited to generator-only, single-bus cases; attaching StorageUnits does not make that helper a storage-capable solver.
+
 **Next engineering gate:** publish reviewed generator/storage parameter tables
 with traceable sources, physical units, geographic and temporal coverage, and
 technology-to-bus mapping; only then label a dispatch scenario empirical.
