@@ -188,3 +188,25 @@ def test_dispatch_audit_hourly_cost_with_different_objective_weights():
     solved, _, _ = solve_illustrative_dispatch(network)
     report = summarize_illustrative_dispatch(solved)
     assert report["operating_cost_eur"] == pytest.approx(350.0)
+
+
+def test_solver_rejects_storage_before_optimization():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=1.0)
+    network.add("Generator", "supply", bus="test", p_nom=2.0)
+    network.add("StorageUnit", "battery", bus="test", p_nom=1.0, max_hours=1.0)
+    with pytest.raises(ValueError, match="generator-only"):
+        solve_illustrative_dispatch(network)
+
+
+def test_solver_rejects_multiple_buses_before_optimization():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Bus", "other")
+    network.add("Load", "demand", bus="test", p_set=1.0)
+    network.add("Generator", "supply", bus="test", p_nom=2.0)
+    with pytest.raises(ValueError, match="single-bus"):
+        solve_illustrative_dispatch(network)
