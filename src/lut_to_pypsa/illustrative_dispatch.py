@@ -18,6 +18,10 @@ def solve_illustrative_dispatch(network, *, solver_name="highs"):
         raise ValueError("Dispatch requires at least one Load")
     if network.generators.empty:
         raise ValueError("Dispatch requires at least one Generator")
+    if not network.storage_units.empty or not network.stores.empty or not network.links.empty or not network.lines.empty:
+        raise ValueError("Illustrative dispatch supports generator-only networks without transfers or storage")
+    if len(network.buses) != 1:
+        raise ValueError("Illustrative dispatch requires a single-bus network")
     result = network.copy()
     status, condition = result.optimize(solver_name=solver_name)
     if status != "ok" or condition != "optimal":
