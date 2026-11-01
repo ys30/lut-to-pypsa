@@ -20,3 +20,16 @@ def test_five_region_full_2020_solve(tmp_path):
     assert report.demand_mwh.sum() == pytest.approx(expected_mwh, rel=1e-10)
     assert report.generation_mwh.sum() == pytest.approx(expected_mwh, rel=1e-10)
     assert (tmp_path / "illustrative_five_region_solved.nc").is_file()
+
+
+def test_negative_reserve_margin_rejected(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    with pytest.raises(ValueError, match="Invalid reserve margin"):
+        run(source, tmp_path, year=2020, reserve_margin=-0.1)
+
+
+def test_reserve_margin_provenance_recorded(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    report = run(source, tmp_path, year=2020, reserve_margin=0.20)
+    assert (report.assumed_reserve_margin == 0.20).all()
+    assert (report.shortage_generation_mwh.abs() < 0.01).all()
