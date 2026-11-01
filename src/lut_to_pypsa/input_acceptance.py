@@ -122,6 +122,22 @@ def run(source_csv, output_dir, year=2020):
     metadata["network_sha256"] = hashlib.sha256((out / "lut_load_only.nc").read_bytes()).hexdigest()
     metadata["source_csv_sha256"] = hashlib.sha256(Path(source_csv).read_bytes()).hexdigest()
     metadata["network_scope"] = "source_traced_load_only"
+    metadata["handoff_contract"] = {
+        "schema_version": "1.0",
+        "artifact": "lut_load_only.nc",
+        "artifact_sha256": metadata["network_sha256"],
+        "snapshots": metadata["snapshots"],
+        "snapshot_frequency": "1h",
+        "timezone": "naive_2020_calendar",
+        "load_power_unit": "MW",
+        "annual_energy_unit": "MWh",
+        "geography": "LUT_five_continents_not_Western_US",
+        "network_scope": "load_only",
+        "hourly_profile": "flat_assumption",
+        "source_quantity": "annual_energy_service_demand",
+        "requires_explicit_geographic_mapping": True,
+        "empirical_generation_parameters_included": False,
+    }
     (out / "lut_pypsa_input_manifest.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + chr(10), encoding="utf-8"
     )
