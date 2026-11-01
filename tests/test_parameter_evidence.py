@@ -79,3 +79,22 @@ def test_reject_wrong_physical_unit():
     evidence.loc[0, "unit"] = "MWh"
     with pytest.raises(ValueError, match="Incorrect unit"):
         validate_parameter_evidence(evidence)
+
+
+def test_annualized_capital_cost_requires_source_evidence():
+    parameters, evidence = fixtures()
+    parameters["capital_cost_eur_per_mw_year"] = [150.]
+    with pytest.raises(ValueError, match="Missing source-checked parameter evidence"):
+        check_parameter_evidence_coverage(parameters, evidence)
+
+
+def test_annualized_capital_cost_with_matching_evidence():
+    parameters, evidence = fixtures()
+    parameters["capital_cost_eur_per_mw_year"] = [150.]
+    extra = evidence.iloc[:1].copy()
+    extra.loc[:, "parameter_name"] = "capital_cost_eur_per_mw_year"
+    extra.loc[:, "parameter_value"] = 150.
+    extra.loc[:, "unit"] = "EUR/MW/year"
+    assert check_parameter_evidence_coverage(
+        parameters, pd.concat([evidence, extra], ignore_index=True)
+    )
