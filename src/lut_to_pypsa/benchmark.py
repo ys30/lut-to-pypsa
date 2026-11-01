@@ -4,12 +4,15 @@ NOT a LUT-ESTM replication: dispatchable firm supply and shortage penalty are
 explicit assumptions, with no observed generation fleet or interties.
 """
 from pathlib import Path
+from math import isfinite
 import argparse
 import pandas as pd
 from .hourly import build_load_network
 
 def add_illustrative_supply(network, reserve_margin=0.10, firm_cost=50., shortage_cost=10000., firm_capacity_factor=1.0):
-    if (reserve_margin < 0 or firm_cost < 0 or shortage_cost <= firm_cost
+    if (not all(isfinite(float(x)) for x in
+                (reserve_margin, firm_cost, shortage_cost, firm_capacity_factor))
+            or reserve_margin < 0 or firm_cost < 0 or shortage_cost <= firm_cost
             or not 0 <= firm_capacity_factor <= 1):
         raise ValueError('Invalid reserve margin or costs')
     for load in network.loads.index:
