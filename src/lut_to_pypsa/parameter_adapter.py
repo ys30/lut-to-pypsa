@@ -4,8 +4,6 @@ This constructs components only; it does not run optimization or claim LUT equiv
 """
 import math
 
-import math
-
 import pandas as pd
 
 from .technology_parameters import validate_technology_parameters
