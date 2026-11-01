@@ -103,6 +103,36 @@ jobs:
                   merged.expected_shortage_mwh).abs().max()<0.01
           print(audit.to_string(index=False))
           PY
+      - name: Solve full-year 50-percent firm-capacity stress scenario
+        run: |
+          python -m lut_to_pypsa.five_region_pipeline \
+            --annual data/derived/lut_continents_2020_verified.csv \
+            --year 2020 \
+            --firm-capacity-factor 0.5 \
+            --output outputs/five_region_stress50
+      - name: Verify full-year stress dispatch against independent reference
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from lut_to_pypsa.analytical_sensitivity import expected_dispatch
+          source = "data/derived/lut_continents_2020_verified.csv"
+          audit = pd.read_csv("outputs/five_region_stress50/regional_dispatch_audit.csv")
+          reference = expected_dispatch(source, firm_capacity_factor=0.5)
+          comparison = audit.merge(reference, on="region", suffixes=("_solver", "_expected"), validate="one_to_one")
+          assert len(comparison) == 5
+          assert set(comparison.solver_status) == {"ok"}
+          assert set(comparison.termination_condition) == {"optimal"}
+          assert comparison.max_abs_balance_mw.max() < 1e-5
+          for field in ("demand_mwh", "firm_generation_mwh", "shortage_generation_mwh",
+                        "shortage_fraction", "illustrative_dispatch_cost"):
+              actual = comparison[f"{field}_solver"]
+              expected = comparison[f"{field}_expected"]
+              assert ((actual - expected).abs() <= (0.01 + 1e-9 * expected.abs())).all(), field
+          assert (comparison.shortage_generation_mwh_solver > 0).all()
+          comparison.to_csv("outputs/five_region_stress50/solver_vs_analytical.csv", index=False)
+          print(comparison[["region", "shortage_fraction_solver",
+                            "shortage_generation_mwh_solver"]].to_string(index=False))
+          PY
       - name: Publish acceptance summary
         if: always()
         run: |
@@ -113,7 +143,7 @@ jobs:
           summary = ["## Five-region LUT-to-PyPSA acceptance",
                      "Supply is illustrative; LUT inputs are annual energy-service demand.",
                      ""]
-          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv"):
+          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv", "../five_region_stress50/solver_vs_analytical.csv"):
               path = Path("outputs/five_region") / name
               if path.exists():
                   frame = pd.read_csv(path)
@@ -128,5 +158,7 @@ jobs:
         if: always()
         with:
           name: five-region-illustrative-results
-          path: outputs/five_region/
+          path: |
+            outputs/five_region/
+            outputs/five_region_stress50/
           if-no-files-found: warn
