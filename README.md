@@ -79,6 +79,22 @@ tests/                 schema and network checks
 .github/workflows/     continuous integration
 ```
 
+## Verified CI baseline (commit bd4d2f9)
+
+On commit `bd4d2f9`, GitHub Actions reported **success** for the
+[LUT input and parameter acceptance](https://github.com/ys30/lut-to-pypsa/actions/workflows/lut-input-acceptance.yml),
+[PyPSA integration](https://github.com/ys30/lut-to-pypsa/actions/workflows/pypsa-integration.yml),
+and [Tests](https://github.com/ys30/lut-to-pypsa/actions/workflows/tests.yml) workflows.
+This verifies the automated acceptance, integration, and regression checks for
+that revision; it does **not** verify real generation/storage parameter sourcing,
+observed hourly load shapes, calibration, or LUT-ESTM/PyPSA output equivalence.
+The 2020 source-traced NetCDF is a **load-only** artifact, while solved dispatch
+examples use explicitly illustrative capacity and cost assumptions.
+
+**Next engineering gate:** publish reviewed generator/storage parameter tables
+with traceable sources, physical units, geographic and temporal coverage, and
+technology-to-bus mapping; only then label a dispatch scenario empirical.
+
 ## Reproducibility status
 
 The repository is designed to run on GitHub Actions with Python 3.11. A successful CI run is required before treating the full PyPSA build/solve path as verified. Check the workflow status and dependency versions when using this code.
