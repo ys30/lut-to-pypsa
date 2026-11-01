@@ -1,0 +1,65 @@
+import pandas as pd
+import pytest
+
+from lut_to_pypsa.parameter_adapter import attach_reviewed_components
+
+
+def fixture():
+    import pypsa
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "region_a")
+    mapping = pd.DataFrame({
+        "lut_technology": ["solar", "battery"],
+        "pypsa_component": ["Generator", "StorageUnit"],
+    })
+    parameters = pd.DataFrame({
+        "lut_technology": ["solar", "battery"],
+        "pypsa_component": ["Generator", "StorageUnit"],
+        "capacity_mw": [100., 20.],
+        "capacity_basis": ["electrical_nameplate", "power_rating"],
+        "source_reference": ["https://example.org/a", "https://example.org/b"],
+        "data_year": [2020, 2020],
+        "marginal_cost_eur_per_mwh": [1., 2.],
+        "availability_fraction": [.25, 1.],
+        "efficiency": [1., .9],
+        "standing_loss_per_hour": [0., .01],
+        "max_hours": [float("nan"), 4.],
+    })
+    return network, mapping, parameters
+
+
+def test_reviewed_generator_and_storage_are_attached_without_solve():
+    network, mapping, parameters = fixture()
+    result = attach_reviewed_components(
+        network, parameters, mapping, {"solar": "region_a", "battery": "region_a"})
+    assert result.generators.loc["lut_solar", "p_nom"] == pytest.approx(100.)
+    assert result.generators.loc["lut_solar", "p_max_pu"] == pytest.approx(.25)
+    assert result.storage_units.loc["lut_battery", "max_hours"] == pytest.approx(4.)
+    assert result.storage_units.loc["lut_battery", "efficiency_store"] == pytest.approx(.9)
+    assert result.storage_units.loc["lut_battery", "standing_loss"] == pytest.approx(.01)
+    assert network.generators.empty
+    assert network.storage_units.empty
+
+
+def test_reject_unknown_bus():
+    network, mapping, parameters = fixture()
+    with pytest.raises(ValueError, match="Unknown PyPSA bus"):
+        attach_reviewed_components(
+            network, parameters, mapping, {"solar": "unknown", "battery": "region_a"})
+
+
+def test_reject_missing_operating_cost():
+    network, mapping, parameters = fixture()
+    parameters.loc[0, "marginal_cost_eur_per_mwh"] = float("nan")
+    with pytest.raises(ValueError, match="Missing marginal cost"):
+        attach_reviewed_components(
+            network, parameters, mapping, {"solar": "region_a", "battery": "region_a"})
+
+
+def test_reject_unconventioned_capital_cost():
+    network, mapping, parameters = fixture()
+    parameters["capital_cost_eur_per_mw_year"] = [100., 100.]
+    with pytest.raises(ValueError, match="optimization-period convention"):
+        attach_reviewed_components(
+            network, parameters, mapping, {"solar": "region_a", "battery": "region_a"})
