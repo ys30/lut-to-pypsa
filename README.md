@@ -30,6 +30,23 @@ The [successful GitHub Actions run #28](https://github.com/ys30/lut-to-pypsa/act
 
 Both cases use a **10% assumed firm capacity reserve margin**. In the stress case, firm availability equals `(1 + 0.10) × 0.5 = 0.55` of the constant hourly load, producing 45% shortage proxy generation **by construction**. This is a sensitivity of an illustrative, unconstrained firm-supply assumption—not an observed blackout estimate, regional climate vulnerability measure, or calibrated energy-system forecast. All five continents have the same modeled shortage fraction because they use identical stress factors and flat hourly profiles. Costs are illustrative objective units, not validated electricity-system expenditure. The five-region annual experiment is separate from the three-region, 24-hour synthetic tutorial described above.
 
+### Verified visualization pipeline
+
+The [successful figure-generation acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41351700293) (commit `de3535e7`) generated and validated three PNG figures directly from audited solver and analytical outputs. The [CI artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41351700293/artifacts/13101134627) contains the figures and the underlying CSV/NetCDF files.
+
+| Figure in the downloadable CI artifact | Interpretation |
+| --- | --- |
+| `figures/five_region_annual_demand.png` | Authentic source-traced LUT annual demand, five continents |
+| `figures/five_region_stress50_dispatch.png` | **Actual full-year PyPSA solve**, firm vs. shortage proxy generation under assumed 50% capacity factor |
+| `figures/five_region_capacity_sensitivity.png` | **Closed-form sensitivity** with two independently solved PyPSA anchors (100% and 50%) |
+
+The figures are intentionally **not embedded from unversioned image URLs**: the linked immutable CI run provides the image files and their underlying numerical provenance. To regenerate, run the two annual scenarios and analytical sensitivity export below, then:
+
+```bash
+python -m pip install matplotlib
+python -m lut_to_pypsa.plot_five_region --base outputs/five_region --stress outputs/five_region_stress50 --output outputs/figures
+```
+
 To reproduce the two actual solver scenarios locally:
 
 ```bash
