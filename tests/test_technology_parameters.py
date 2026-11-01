@@ -17,6 +17,7 @@ def fixtures():
         "source_reference": ["https://example.org/a", "https://example.org/b"],
         "data_year": [2020, 2020],
         "efficiency": [1., .9],
+        "efficiency_basis": ["per_direction", "per_direction"],
         "availability_fraction": [.25, 1.],
         "max_hours": [float("nan"), 4.],
     })
