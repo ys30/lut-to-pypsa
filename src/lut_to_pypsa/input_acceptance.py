@@ -96,10 +96,14 @@ def export_accepted_load_network(annual, output_path, year=2020):
 
 
 def run(source_csv, output_dir, year=2020):
-    report, metadata = audit_lut_network_inputs(pd.read_csv(source_csv), year)
+    annual = pd.read_csv(source_csv)
+    report, metadata = audit_lut_network_inputs(annual, year)
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     report.to_csv(out / "lut_pypsa_input_conservation.csv", index=False)
+    export_accepted_load_network(annual, out / "lut_load_only.nc", year=year)
+    metadata["network_artifact"] = "lut_load_only.nc"
+    metadata["network_scope"] = "source_traced_load_only"
     (out / "lut_pypsa_input_manifest.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + chr(10), encoding="utf-8"
     )
