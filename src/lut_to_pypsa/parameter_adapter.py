@@ -2,6 +2,8 @@
 
 This constructs components only; it does not run optimization or claim LUT equivalence.
 """
+import math
+
 import pandas as pd
 
 from .technology_parameters import validate_technology_parameters
@@ -54,7 +56,14 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
                 raise ValueError("StorageUnit requires reviewed standing loss")
             # A single per-direction efficiency is applied twice in a cycle.
             # Thus round-trip efficiency equals efficiency_store * efficiency_dispatch.
-            per_direction_efficiency = float(row["efficiency"])
+            if "efficiency_basis" not in row or pd.isna(row["efficiency_basis"]):
+                raise ValueError("StorageUnit requires explicit efficiency_basis")
+            basis = row["efficiency_basis"]
+            if basis not in {"per_direction", "round_trip"}:
+                raise ValueError("Unsupported storage efficiency_basis")
+            stated_efficiency = float(row["efficiency"])
+            per_direction_efficiency = (math.sqrt(stated_efficiency)
+                                        if basis == "round_trip" else stated_efficiency)
             attrs.update({
                 "max_hours": float(row["max_hours"]),
                 "efficiency_store": per_direction_efficiency,
