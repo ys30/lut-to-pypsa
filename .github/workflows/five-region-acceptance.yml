@@ -181,6 +181,35 @@ jobs:
               shortage_mwh=("shortage_generation_mwh_solver", "sum"),
               shortage_fraction=("shortage_fraction_solver", "mean")).to_string())
           PY
+      - name: Solve full-year synthetic diurnal load sensitivity
+        run: |
+          python -m lut_to_pypsa.five_region_pipeline \
+            --annual data/derived/lut_continents_2020_verified.csv \
+            --year 2020 \
+            --load-profile diurnal \
+            --diurnal-amplitude 0.20 \
+            --firm-capacity-factor 0.5 \
+            --output outputs/five_region_diurnal_stress50
+      - name: Audit diurnal versus flat load sensitivity
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          flat = pd.read_csv("outputs/five_region_stress50/regional_dispatch_audit.csv")
+          shaped = pd.read_csv("outputs/five_region_diurnal_stress50/regional_dispatch_audit.csv")
+          hourly = pd.read_csv("outputs/five_region_diurnal_stress50/lut_hourly_diurnal_loads.csv")
+          assert len(hourly) == 8784 * 5
+          assert hourly.groupby("region").p_set_mw.nunique().min() > 1
+          merged = flat.merge(shaped, on="region", suffixes=("_flat", "_diurnal"), validate="one_to_one")
+          assert len(merged) == 5
+          assert set(shaped.solver_status) == {"ok"}
+          assert set(shaped.termination_condition) == {"optimal"}
+          assert shaped.max_abs_balance_mw.max() < 1e-5
+          assert (merged.demand_mwh_flat - merged.demand_mwh_diurnal).abs().max() < 0.01
+          assert (merged.shortage_fraction_diurnal >= 0).all()
+          assert (merged.shortage_fraction_diurnal <= 1).all()
+          merged.to_csv("outputs/five_region/diurnal_vs_flat_solver.csv", index=False)
+          print(merged[["region", "shortage_fraction_flat", "shortage_fraction_diurnal"]].to_string(index=False))
+          PY
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
@@ -226,4 +255,6 @@ jobs:
             outputs/five_region_factor_075/regional_dispatch_audit.csv
             outputs/five_region_factor_025/regional_dispatch_audit.csv
             outputs/figures/
+            outputs/five_region_diurnal_stress50/regional_dispatch_audit.csv
+            outputs/five_region_diurnal_stress50/annual_energy_check.csv
           if-no-files-found: warn
