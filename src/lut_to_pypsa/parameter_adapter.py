@@ -8,15 +8,18 @@ from .technology_parameters import validate_technology_parameters
 from .parameter_evidence import check_parameter_evidence_coverage
 
 
-def attach_reviewed_components(network, parameters, mapping, bus_by_technology, *, evidence=None):
+def attach_reviewed_components(network, parameters, mapping, bus_by_technology, *, evidence=None, empirical=False):
     """Return a copy of network with explicitly parameterized Generator/StorageUnit.
 
     When evidence is supplied, every used parameter must match source-checked evidence.
-    Without evidence, this is a fixture/illustrative adapter, not an empirical result.
+    Set empirical=True to reject missing evidence. Without evidence, this is a
+    fixture/illustrative adapter, not an empirical result.
     A scalar availability is a constant illustrative ceiling, not a weather profile.
     Costs are in EUR/MWh and EUR/MW-year; no currency conversion is inferred.
     """
     validated = validate_technology_parameters(parameters, mapping)
+    if empirical and evidence is None:
+        raise ValueError('Empirical mode requires source-checked parameter evidence')
     if evidence is not None:
         check_parameter_evidence_coverage(validated, evidence)
     if set(validated.lut_technology) != set(bus_by_technology):
