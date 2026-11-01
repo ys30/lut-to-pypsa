@@ -75,6 +75,9 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     imbalance_mwh = generation_mwh - demand_mwh
     if abs(imbalance_mwh) > tolerance_mwh:
         raise ValueError(f"Dispatch energy imbalance: {imbalance_mwh} MWh")
+    # Static-cost audit must not silently ignore time-varying PyPSA costs.
+    if len(network.generators_t.marginal_cost.columns.intersection(network.generators.index)):
+        raise ValueError("Time-varying generator marginal costs are not supported by this summary")
     marginal_cost = pd.to_numeric(network.generators.marginal_cost, errors="raise")
     if marginal_cost.isna().any():
         raise ValueError("Missing generator marginal cost")
