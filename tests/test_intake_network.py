@@ -135,3 +135,28 @@ def test_cli_exports_auditable_hourly_dispatch_csv(tmp_path):
     assert list(actual.columns) == ["snapshot", "generator", "dispatch_mw"]
     assert len(actual) == 2
     assert actual.dispatch_mw.tolist() == pytest.approx([2.0, 3.0])
+
+
+def test_cli_regional_mode_writes_audited_outputs(tmp_path):
+    """A single-bus intake can use the regional solve path end to end."""
+    from lut_to_pypsa.intake_network import main
+    parameters, evidence, mapping = write_intake(tmp_path)
+    buses, demand, snapshots = [tmp_path / name for name in
+                               ("buses.csv", "demand.csv", "snapshots.csv")]
+    times = pd.date_range("2020-01-01", periods=2, freq="h")
+    pd.DataFrame({"lut_technology": ["example_solar"], "bus": ["test"]}).to_csv(buses, index=False)
+    pd.DataFrame({"snapshot": times, "bus": ["test", "test"],
+                  "demand_mw": [2.0, 3.0]}).to_csv(demand, index=False)
+    pd.DataFrame({"snapshot": times}).to_csv(snapshots, index=False)
+    report_path, dispatch_path = tmp_path / "regional.csv", tmp_path / "dispatch.csv"
+    main(["--parameters", str(parameters), "--evidence", str(evidence),
+          "--mapping", str(mapping), "--buses", str(buses),
+          "--snapshots", str(snapshots), "--demand", str(demand),
+          "--output", str(tmp_path / "regional.nc"), "--solve-regional",
+          "--regional-summary-csv", str(report_path), "--dispatch-csv", str(dispatch_path)])
+    report = pd.read_csv(report_path)
+    dispatch = pd.read_csv(dispatch_path)
+    assert report.bus.tolist() == ["test"]
+    assert report.demand_mwh.iloc[0] == pytest.approx(5.0)
+    assert report.generation_mwh.iloc[0] == pytest.approx(5.0)
+    assert dispatch.dispatch_mw.tolist() == pytest.approx([2.0, 3.0])
