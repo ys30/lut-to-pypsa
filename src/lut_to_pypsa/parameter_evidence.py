@@ -26,6 +26,8 @@ EXPECTED_UNITS = {
 
 
 def validate_parameter_evidence(evidence, *, require_source_checked=True):
+    if not evidence.columns.is_unique:
+        raise ValueError("Duplicate evidence column names")
     missing = REQUIRED - set(evidence.columns)
     if missing:
         raise ValueError(f"Missing evidence columns: {sorted(missing)}")
@@ -39,6 +41,8 @@ def validate_parameter_evidence(evidence, *, require_source_checked=True):
     invalid = set(evidence.evidence_status) - ALLOWED_STATUS
     if invalid:
         raise ValueError(f"Unknown evidence status: {sorted(invalid)}")
+    if not evidence.parameter_name.isin(EXPECTED_UNITS).all():
+        raise ValueError("Unknown parameter evidence name")
     for row in evidence.itertuples(index=False):
         expected_unit = EXPECTED_UNITS.get(row.parameter_name)
         if expected_unit is not None and row.unit != expected_unit:
