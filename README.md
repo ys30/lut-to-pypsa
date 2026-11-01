@@ -55,7 +55,9 @@ The following versioned SVGs are committed to the repository, so the README can 
 
 ![Illustrative full-year PyPSA 50-percent firm-capacity dispatch by continent](docs/figures/five_region_stress50_dispatch.svg)
 
-The first chart shows authentic source-traced annual energy-service demand. The second visualizes the **verified illustrative PyPSA 50% capacity stress scenario**, where shortage-proxy generation is not an observed outage measure. SVG figures are presentation snapshots; the CI-generated PNGs and CSV/NetCDF outputs are reproducible using the commands below.
+![Four full-year PyPSA capacity sensitivity scenarios and closed-form expectations](docs/figures/five_region_capacity_sensitivity.svg)
+
+The first chart shows authentic source-traced annual energy-service demand. The second visualizes the **verified illustrative PyPSA 50% capacity stress scenario**, where shortage-proxy generation is not an observed outage measure. The third chart shows the four full-year solver-verified shortage proxy shares (0%, 17.5%, 45%, 72.5%) alongside their closed-form analytical expectation. SVG figures are presentation snapshots; the CI-generated PNGs and CSV/NetCDF outputs are reproducible using the commands below.
 
 ### Verified visualization pipeline
 
