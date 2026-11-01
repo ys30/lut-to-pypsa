@@ -82,3 +82,17 @@ def test_intake_cli_writes_solved_netcdf_and_json(tmp_path):
     assert report["termination_condition"] == "optimal"
     assert report["demand_mwh"] == pytest.approx(5.0)
     assert report["operating_cost_eur"] == pytest.approx(5.0)
+
+
+def test_intake_network_accepts_numeric_strings_and_utc_snapshots(tmp_path):
+    """CSV numeric coercion and UTC normalization survive the full adapter."""
+    parameters, evidence, mapping = write_intake(tmp_path)
+    buses, demand = tmp_path / "buses.csv", tmp_path / "demand.csv"
+    pd.DataFrame({"lut_technology": ["example_solar"], "bus": ["test"]}).to_csv(buses, index=False)
+    times = ["2020-01-01T00:00:00Z", "2020-01-01T01:00:00Z"]
+    pd.DataFrame({"snapshot": times, "bus": ["test", "test"],
+                  "demand_mw": ["2.0", "3.0"]}).to_csv(demand, index=False)
+    network = build_intake_network(parameters, evidence, mapping, buses,
+                                   snapshots=times, demand_path=demand)
+    assert network.snapshots.tz is None
+    assert list(network.loads_t.p_set["load_test"]) == pytest.approx([2.0, 3.0])
