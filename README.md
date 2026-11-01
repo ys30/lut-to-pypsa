@@ -308,3 +308,19 @@ python -m pytest -q tests/test_illustrative_dispatch.py
 
 The latest acceptance workflow also reruns these tests with verbose tracebacks
 on failure. GitHub Actions status must be checked independently of a commit.
+
+## Machine-readable handoff to downstream PyPSA projects
+
+The acceptance workflow exports `lut_load_only.nc`,
+`lut_pypsa_input_conservation.csv`, and `lut_pypsa_input_manifest.json`.
+The manifest includes SHA-256 checksums for the source CSV and exported
+NetCDF, plus a `handoff_contract` describing temporal resolution, physical
+units, geographic scope, and whether generation parameters are empirical.
+
+**Do not load these five-continent LUT energy-service-demand values as Western
+US electricity loads.** The geography, end-use definition, and temporal shape
+are different. Project B must supply an independently documented regional
+mapping and a justified conversion from annual ESD to modeled electrical load
+before any such use. A matching checksum verifies file identity, not physical
+or geographic comparability.
+
