@@ -98,3 +98,17 @@ def test_annualized_capital_cost_with_matching_evidence():
     assert check_parameter_evidence_coverage(
         parameters, pd.concat([evidence, extra], ignore_index=True)
     )
+
+
+def test_reject_duplicate_evidence_column_labels():
+    _, evidence = fixtures()
+    evidence.columns = list(evidence.columns[:-1]) + ["parameter_name"]
+    with pytest.raises(ValueError, match="Duplicate evidence column names"):
+        validate_parameter_evidence(evidence)
+
+
+def test_reject_unrecognized_evidence_parameter():
+    _, evidence = fixtures()
+    evidence.loc[0, "parameter_name"] = "unrecognized_parameter"
+    with pytest.raises(ValueError, match="Unknown parameter evidence name"):
+        validate_parameter_evidence(evidence)
