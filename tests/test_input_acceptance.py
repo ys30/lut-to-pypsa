@@ -33,3 +33,16 @@ def test_reject_non_esd_quantity():
     annual.loc[0, "quantity_kind"] = "generation"
     with pytest.raises(ValueError, match="Unsupported LUT quantity"):
         audit_lut_network_inputs(annual)
+
+
+@pytest.mark.parametrize("mutation,match", [
+    (lambda x: x.assign(region=["Africa"] * len(x)), "Duplicate LUT region"),
+    (lambda x: x.assign(source_cell=["C11"] * len(x)), "Duplicate LUT source cell"),
+    (lambda x: x.assign(value_twh=[float("nan")] * len(x)), "Invalid LUT annual demand"),
+    (lambda x: x.assign(value_twh=[float("inf")] * len(x)), "Invalid LUT annual demand"),
+    (lambda x: x.assign(value_twh=[-1.] * len(x)), "Invalid LUT annual demand"),
+])
+def test_reject_ambiguous_or_nonphysical_lut_source(mutation, match):
+    annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
+    with pytest.raises(ValueError, match=match):
+        audit_lut_network_inputs(mutation(annual))
