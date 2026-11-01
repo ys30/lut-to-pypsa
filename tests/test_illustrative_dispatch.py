@@ -123,3 +123,26 @@ def test_dispatch_audit_rejects_nonfinite_generation(bad_value):
     solved.generators_t.p.loc[network.snapshots[0], "supply"] = bad_value
     with pytest.raises(ValueError, match="Nonfinite generator dispatch"):
         summarize_illustrative_dispatch(solved)
+
+
+def test_dispatch_audit_rejects_generator_on_different_bus():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=1.0)
+    network.add("Generator", "supply", bus="test", p_nom=2.0)
+    # A dangling reference must not be silently accepted as a single-bus model.
+    network.generators.loc["supply", "bus"] = "nonexistent"
+    with pytest.raises(ValueError, match="same bus"):
+        summarize_illustrative_dispatch(network)
+
+
+def test_dispatch_audit_rejects_load_on_different_bus():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=1.0)
+    network.add("Generator", "supply", bus="test", p_nom=2.0)
+    network.loads.loc["demand", "bus"] = "nonexistent"
+    with pytest.raises(ValueError, match="same bus"):
+        summarize_illustrative_dispatch(network)
