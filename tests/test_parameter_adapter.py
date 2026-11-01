@@ -73,7 +73,7 @@ def test_empirical_evidence_gate_rejects_unchecked_values():
     for item in parameters.to_dict("records"):
         for name in ("capacity_mw", "marginal_cost_eur_per_mwh",
                      "availability_fraction", "efficiency",
-                     "standing_loss_per_hour", "max_hours"):
+                     "standing_loss_per_hour", "max_hours", "efficiency_basis"):
             if pd.notna(item[name]):
                 rows.append({
                     "lut_technology": item["lut_technology"],
