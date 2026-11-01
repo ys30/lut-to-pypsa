@@ -52,10 +52,13 @@ def attach_reviewed_components(network, parameters, mapping, bus_by_technology, 
                 raise ValueError("StorageUnit requires reviewed efficiency")
             if "standing_loss_per_hour" not in row or pd.isna(row["standing_loss_per_hour"]):
                 raise ValueError("StorageUnit requires reviewed standing loss")
+            # A single per-direction efficiency is applied twice in a cycle.
+            # Thus round-trip efficiency equals efficiency_store * efficiency_dispatch.
+            per_direction_efficiency = float(row["efficiency"])
             attrs.update({
                 "max_hours": float(row["max_hours"]),
-                "efficiency_store": float(row["efficiency"]),
-                "efficiency_dispatch": float(row["efficiency"]),
+                "efficiency_store": per_direction_efficiency,
+                "efficiency_dispatch": per_direction_efficiency,
                 "standing_loss": float(row["standing_loss_per_hour"]),
                 "p_max_pu": float(row["availability_fraction"]),
             })
