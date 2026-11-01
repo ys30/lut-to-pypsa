@@ -159,3 +159,32 @@ def test_dispatch_audit_supports_time_varying_marginal_costs():
     report = summarize_illustrative_dispatch(solved)
     assert report["operating_cost_eur"] == pytest.approx(150.0)
     assert report["generation_mwh"] == pytest.approx(20.0)
+
+
+def test_dispatch_audit_rejects_missing_hourly_marginal_cost():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    solved.generators_t.marginal_cost["supply"] = pd.Series(
+        [5.0, float("nan")], index=solved.snapshots
+    )
+    with pytest.raises(ValueError, match="Invalid time-varying generator marginal cost"):
+        summarize_illustrative_dispatch(solved)
+
+
+def test_dispatch_audit_hourly_cost_with_different_objective_weights():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.snapshot_weightings["objective"] = pd.Series(
+        [1.0, 3.0], index=network.snapshots
+    )
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0,
+                marginal_cost=pd.Series([5.0, 10.0], index=network.snapshots))
+    solved, _, _ = solve_illustrative_dispatch(network)
+    report = summarize_illustrative_dispatch(solved)
+    assert report["operating_cost_eur"] == pytest.approx(350.0)
