@@ -7,6 +7,7 @@ on:
       - "tests/test_five_region_pipeline.py"
       - "tests/test_regional_dispatch.py"
       - "tests/test_readme_figures.py"
+      - "tests/test_diurnal_hourly.py"
       - "docs/figures/**"
       - "README.md"
       - "tests/test_analytical_sensitivity.py"
@@ -30,7 +31,7 @@ jobs:
       - name: Install package and solver
         run: python -m pip install -e '.[dev]'
       - name: Audit analytical baseline independently of solver
-        run: python -m pytest -q tests/test_five_region_analytical_baseline.py tests/test_analytical_sensitivity.py tests/test_readme_figures.py
+        run: python -m pytest -q tests/test_five_region_analytical_baseline.py tests/test_analytical_sensitivity.py tests/test_readme_figures.py tests/test_diurnal_hourly.py
       - name: Run five-region acceptance test
         run: python -m pytest -q tests/test_regional_dispatch.py tests/test_five_region_pipeline.py tests/test_sensitivity_solver_crosscheck.py -k "not test_five_region_full_2020_solve"
       - name: Run 24-hour five-region solver smoke test
