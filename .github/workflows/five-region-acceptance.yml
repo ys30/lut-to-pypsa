@@ -27,6 +27,23 @@ jobs:
         run: python -m pytest -q tests/test_five_region_analytical_baseline.py
       - name: Run five-region acceptance test
         run: python -m pytest -q tests/test_five_region_pipeline.py tests/test_regional_dispatch.py
+      - name: Run 24-hour five-region solver smoke test
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from lut_to_pypsa.hourly import hourly_flat, build_load_network
+          from lut_to_pypsa.benchmark import add_illustrative_supply
+          from lut_to_pypsa.regional_dispatch import solve_regional_dispatch
+          annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
+          hourly = hourly_flat(annual, 2020)
+          first_day = hourly.loc[hourly.timestamp < pd.Timestamp("2020-01-02")]
+          network = add_illustrative_supply(build_load_network(first_day))
+          solved, audit, status, condition = solve_regional_dispatch(network)
+          assert (status, condition) == ("ok", "optimal")
+          assert len(audit) == 5 and len(solved.snapshots) == 24
+          assert audit.max_abs_balance_mw.max() < 1e-5
+          print(audit.to_string(index=False))
+          PY
       - name: Run full-year illustrative five-region solve
         run: |
           python -m lut_to_pypsa.five_region_pipeline \
