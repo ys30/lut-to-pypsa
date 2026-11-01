@@ -87,7 +87,7 @@ def export_accepted_load_network(annual, output_path, year=2020):
     """Write an audited load-only PyPSA network; no dispatch or calibration."""
     audit_lut_network_inputs(annual, year=year)
     network = build_load_network(hourly_flat(annual, year))
-    if not network.generators.empty or not network.storage_units.empty:
+    if not network.generators.empty or not network.storage_units.empty or not network.stores.empty or not network.links.empty or not network.lines.empty:
         raise ValueError("Expected load-only network")
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -99,10 +99,12 @@ def export_accepted_load_network(annual, output_path, year=2020):
         raise ValueError("Exported LUT network snapshot mismatch")
     if set(reloaded.loads.index) != set(network.loads.index):
         raise ValueError("Exported LUT network load coverage mismatch")
-    if not reloaded.generators.empty or not reloaded.storage_units.empty or not reloaded.links.empty or not reloaded.lines.empty:
+    if not reloaded.generators.empty or not reloaded.storage_units.empty or not reloaded.stores.empty or not reloaded.links.empty or not reloaded.lines.empty:
         raise ValueError("Exported LUT network is not load-only")
     actual = reloaded.loads_t.p_set.reindex(index=network.snapshots, columns=network.loads.index)
     expected = network.loads_t.p_set.reindex(index=network.snapshots, columns=network.loads.index)
+    if not actual.index.equals(expected.index) or not actual.columns.equals(expected.columns):
+        raise ValueError("Exported LUT network load matrix mismatch")
     if actual.isna().any().any() or not actual.subtract(expected).abs().le(1e-6).all().all():
         raise ValueError("Exported LUT network hourly load mismatch")
     return destination
