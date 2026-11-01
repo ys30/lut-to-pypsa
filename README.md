@@ -38,9 +38,9 @@ The [successful figure-generation acceptance run](https://github.com/ys30/lut-to
 | --- | --- |
 | `figures/five_region_annual_demand.png` | Authentic source-traced LUT annual demand, five continents |
 | `figures/five_region_stress50_dispatch.png` | **Actual full-year PyPSA solve**, firm vs. shortage proxy generation under assumed 50% capacity factor |
-| `figures/five_region_capacity_sensitivity.png` | **Closed-form sensitivity** with two independently solved PyPSA anchors (100% and 50%) |
+| `figures/five_region_capacity_sensitivity.png` | **Closed-form sensitivity** with four independently solved full-year PyPSA anchors (100%, 75%, 50%, 25%) |
 
-The figures are intentionally **not embedded from unversioned image URLs**: the linked immutable CI run provides the image files and their underlying numerical provenance. To regenerate, run the two annual scenarios and analytical sensitivity export below, then:
+The latest [four-scenario acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41353706556) confirms 20 optimal region–scenario solves and publishes `five_region/solver_sensitivity_all_four.csv`. Capacity factors 1.0, 0.75, 0.5 and 0.25 correspond to modeled shortage-proxy shares of 0%, 17.5%, 45% and 72.5%, respectively, under the common illustrative assumptions. The sensitivity plot code now renders all four verified solver anchors when that CSV is present. This extension is not an empirical calibration.\n\nThe figures are intentionally **not embedded from unversioned image URLs**: the linked immutable CI run provides the image files and their underlying numerical provenance. To regenerate, run the two annual scenarios and analytical sensitivity export below, then:
 
 ```bash
 python -m pip install matplotlib
