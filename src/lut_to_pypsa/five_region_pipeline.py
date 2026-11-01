@@ -10,17 +10,19 @@ from .benchmark import add_illustrative_supply
 from .regional_dispatch import solve_regional_dispatch
 
 
-def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10):
+def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10, firm_capacity_factor=1.0):
     annual = pd.read_csv(annual_csv)
     hourly = hourly_flat(annual, year)
     checks = check_energy_conservation(annual.loc[annual.year.eq(year)], hourly)
-    network = add_illustrative_supply(build_load_network(hourly), reserve_margin=reserve_margin)
+    network = add_illustrative_supply(build_load_network(hourly), reserve_margin=reserve_margin,
+                                      firm_capacity_factor=firm_capacity_factor)
     solved, report, status, condition = solve_regional_dispatch(network)
     report = report.rename(columns={"bus": "region"})
     report["solver_status"] = status
     report["termination_condition"] = condition
     report["supply_provenance"] = "assumed_firm_and_shortage_generators"
     report["assumed_reserve_margin"] = reserve_margin
+    report["assumed_firm_capacity_factor"] = firm_capacity_factor
     weights = solved.snapshot_weightings["generators"].reindex(solved.snapshots)
     dispatch = solved.generators_t.p.reindex(index=solved.snapshots)
     for kind in ("firm", "shortage"):
@@ -55,9 +57,12 @@ def main(argv=None):
     parser.add_argument("--year", type=int, default=2020)
     parser.add_argument("--reserve-margin", type=float, default=0.10,
                         help="Illustrative firm capacity margin above each region peak")
+    parser.add_argument("--firm-capacity-factor", type=float, default=1.0,
+                        help="Fraction of assumed firm capacity retained (0 to 1)")
     args = parser.parse_args(argv)
     print(run(args.annual, args.output, year=args.year,
-              reserve_margin=args.reserve_margin).to_string(index=False))
+              reserve_margin=args.reserve_margin,
+              firm_capacity_factor=args.firm_capacity_factor).to_string(index=False))
 
 
 if __name__ == "__main__":
