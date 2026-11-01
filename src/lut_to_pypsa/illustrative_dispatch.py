@@ -43,6 +43,9 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
         raise ValueError("Summary supports generator-only networks without transfers or storage")
     if len(network.buses) != 1:
         raise ValueError("Summary requires a single-bus network")
+    bus = network.buses.index[0]
+    if not network.generators.bus.eq(bus).all() or not network.loads.bus.eq(bus).all():
+        raise ValueError("Summary requires all generators and loads on the same bus")
     snapshots = network.snapshots
     dispatch = network.generators_t.p.reindex(index=snapshots, columns=network.generators.index)
     if dispatch.isna().any().any():
