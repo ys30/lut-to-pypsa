@@ -47,6 +47,16 @@ The plots below are backed by the [successful four-scenario PyPSA acceptance run
 
 **Visuals:** The [downloadable, versioned results artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865/artifacts/13102418017) includes `five_region_annual_demand.png`, `five_region_stress50_dispatch.png`, and `five_region_capacity_sensitivity.png`, alongside the audited CSV outputs. GitHub Actions artifacts are retained temporarily; use the reproducible plotting command below to regenerate them after expiration.
 
+### Figures shown directly in GitHub
+
+The following versioned SVGs are committed to the repository, so the README can render them without relying on expiring GitHub Actions artifacts. Values are rounded for presentation; the CI artifact remains the source for machine-readable solver output.
+
+![2020 source-traced LUT annual demand by continent](docs/figures/five_region_annual_demand.svg)
+
+![Illustrative full-year PyPSA 50-percent firm-capacity dispatch by continent](docs/figures/five_region_stress50_dispatch.svg)
+
+The first chart shows authentic source-traced annual energy-service demand. The second visualizes the **verified illustrative PyPSA 50% capacity stress scenario**, where shortage-proxy generation is not an observed outage measure. SVG figures are presentation snapshots; the CI-generated PNGs and CSV/NetCDF outputs are reproducible using the commands below.
+
 ### Verified visualization pipeline
 
 The [successful four-scenario visualization acceptance run](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865) (commit `a3510a7b`) generated and validated three PNG figures directly from audited solver and analytical outputs, including **all four** full-year PyPSA sensitivity anchors. The [CI artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41354056865/artifacts/13102418017) contains the figures and the underlying CSV/NetCDF files.
