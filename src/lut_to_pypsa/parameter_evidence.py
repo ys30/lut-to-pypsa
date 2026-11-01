@@ -13,6 +13,15 @@ REQUIRED = {
     "geographic_scope", "evidence_status",
 }
 ALLOWED_STATUS = {"source_checked", "assumption", "synthetic_fixture"}
+EXPECTED_UNITS = {
+    "capacity_mw": "MW",
+    "availability_fraction": "fraction",
+    "marginal_cost_eur_per_mwh": "EUR/MWh",
+    "capital_cost_eur_per_mw_year": "EUR/MW/year",
+    "efficiency": "fraction",
+    "max_hours": "hour",
+    "standing_loss_per_hour": "fraction/hour",
+}
 
 
 def validate_parameter_evidence(evidence, *, require_source_checked=True):
@@ -29,6 +38,10 @@ def validate_parameter_evidence(evidence, *, require_source_checked=True):
     invalid = set(evidence.evidence_status) - ALLOWED_STATUS
     if invalid:
         raise ValueError(f"Unknown evidence status: {sorted(invalid)}")
+    for row in evidence.itertuples(index=False):
+        expected_unit = EXPECTED_UNITS.get(row.parameter_name)
+        if expected_unit is not None and row.unit != expected_unit:
+            raise ValueError(f"Incorrect unit for {row.parameter_name}: expected {expected_unit}")
     if require_source_checked and not evidence.evidence_status.eq("source_checked").all():
         raise ValueError("Non-source-checked parameters cannot enter empirical adapter")
     values = pd.to_numeric(evidence.parameter_value, errors="coerce")
