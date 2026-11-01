@@ -23,6 +23,25 @@ def hourly_flat(annual, year):
     check_energy_conservation(selected,out)
     return out
 
+def hourly_diurnal(annual, year, *, amplitude=0.20):
+    """Illustrative sinusoidal daily load shape conserving each annual LUT total.
+
+    This is a synthetic sensitivity assumption, NOT observed hourly LUT data.
+    The annual scaling is computed separately for each region.
+    """
+    import math
+    if not isinstance(amplitude, (int, float)) or not math.isfinite(amplitude) or not 0 <= amplitude < 1:
+        raise ValueError("Invalid diurnal amplitude")
+    out = hourly_flat(annual, year)
+    hour = out.timestamp.dt.hour.to_numpy()
+    import numpy as np
+    multiplier = 1 + amplitude * np.cos(2 * np.pi * (hour - 18) / 24)
+    out["p_set_mw"] = out.p_set_mw.to_numpy() * multiplier
+    selected = annual.loc[annual.year == year, ["region", "value_twh"]]
+    check_energy_conservation(selected, out)
+    return out
+
+
 def check_energy_conservation(selected,hourly,tolerance_mwh=0.01):
     expected=selected.set_index('region').value_twh*1e6
     actual=hourly.groupby('region').p_set_mw.sum()
