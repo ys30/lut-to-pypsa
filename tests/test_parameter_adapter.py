@@ -215,7 +215,8 @@ def test_adapter_rejects_existing_component_name_collision():
 
 def test_adapter_rejects_network_without_snapshots():
     network, mapping, parameters = fixture()
-    network.set_snapshots(pd.DatetimeIndex([]))
+    # PyPSA rejects set_snapshots([]); emulate a malformed imported network.
+    network._snapshots = pd.DatetimeIndex([])
     with pytest.raises(ValueError, match="requires network snapshots"):
         attach_reviewed_components(
             network, parameters, mapping,
