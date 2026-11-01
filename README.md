@@ -14,6 +14,30 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 - Optionally solves dispatch with HiGHS and exports a PyPSA NetCDF network.
 - Includes unit tests, a PyPSA integration test, notebooks, and GitHub Actions.
 
+## Verified five-continent 2020 annual dispatch and stress test (November 2026)
+
+[![Five-region acceptance](https://github.com/ys30/lut-to-pypsa/actions/workflows/five-region-acceptance.yml/badge.svg)](https://github.com/ys30/lut-to-pypsa/actions/workflows/five-region-acceptance.yml)
+
+The [successful GitHub Actions run #28](https://github.com/ys30/lut-to-pypsa/actions/runs/41350809448) (commit `5f3d8cfc`) independently checked the source-cell-traced 2020 LUT annual demand fixture, solved **five electrically isolated continental buses over 8,784 hourly snapshots** using PyPSA/HiGHS, and verified both the base case and a 50%-firm-capacity stress case against analytical expectations. Download the [CI result artifact](https://github.com/ys30/lut-to-pypsa/actions/runs/41350809448/artifacts/13101655695) for actual solver outputs, audits, hourly loads, and analytical sensitivity results.
+
+| Metric | Base (firm capacity factor 1.0) | Stress (firm capacity factor 0.5) |
+| --- | ---: | ---: |
+| Source-traced annual energy-service demand | 22,487.66 TWh | 22,487.66 TWh |
+| Firm generation | 22,487.66 TWh | 12,368.21 TWh |
+| Shortage proxy generation | 0 TWh | 10,119.45 TWh |
+| Shortage proxy share | 0% | 45% |
+| HiGHS status | Optimal | Optimal |
+
+Both cases use a **10% assumed firm capacity reserve margin**. In the stress case, firm availability equals `(1 + 0.10) × 0.5 = 0.55` of the constant hourly load, producing 45% shortage proxy generation **by construction**. This is a sensitivity of an illustrative, unconstrained firm-supply assumption—not an observed blackout estimate, regional climate vulnerability measure, or calibrated energy-system forecast. All five continents have the same modeled shortage fraction because they use identical stress factors and flat hourly profiles. Costs are illustrative objective units, not validated electricity-system expenditure. The five-region annual experiment is separate from the three-region, 24-hour synthetic tutorial described above.
+
+To reproduce the two actual solver scenarios locally:
+
+```bash
+python -m lut_to_pypsa.five_region_pipeline --annual data/derived/lut_continents_2020_verified.csv --year 2020 --output outputs/five_region
+python -m lut_to_pypsa.five_region_pipeline --annual data/derived/lut_continents_2020_verified.csv --year 2020 --firm-capacity-factor 0.5 --output outputs/five_region_stress50
+python -m lut_to_pypsa.analytical_sensitivity --annual data/derived/lut_continents_2020_verified.csv --output outputs/five_region/analytical_sensitivity.csv
+```
+
 ## Installation
 
 Python 3.10+ is required. In a fresh virtual environment:
