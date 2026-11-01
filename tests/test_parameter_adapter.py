@@ -237,3 +237,10 @@ def test_adapter_rejects_cross_component_name_collision():
         )
     assert network.generators.empty
     assert network.storage_units.empty
+
+
+@pytest.mark.parametrize("invalid_mapping", [None, [], {"solar": "", "battery": "region_a"}, {"solar": None, "battery": "region_a"}])
+def test_adapter_rejects_invalid_bus_mapping(invalid_mapping):
+    network, mapping, parameters = fixture()
+    with pytest.raises(ValueError, match="Bus mapping"):
+        attach_reviewed_components(network, parameters, mapping, invalid_mapping)
