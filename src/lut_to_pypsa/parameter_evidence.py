@@ -65,6 +65,14 @@ def validate_parameter_evidence(evidence, *, require_source_checked=True):
 
 
 def check_parameter_evidence_coverage(parameters, evidence):
+    if not parameters.columns.is_unique:
+        raise ValueError("Duplicate parameter column names")
+    if "lut_technology" not in parameters.columns:
+        raise ValueError("Missing lut_technology parameter column")
+    if parameters["lut_technology"].isna().any() or parameters["lut_technology"].astype(str).str.strip().eq("").any():
+        raise ValueError("Blank parameter technology")
+    if parameters["lut_technology"].duplicated().any():
+        raise ValueError("Duplicate parameter technology")
     validated = validate_parameter_evidence(evidence)
     names = {
         "capacity_mw", "availability_fraction", "marginal_cost_eur_per_mwh",
