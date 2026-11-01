@@ -15,6 +15,11 @@ def validate_intake(parameter_path, evidence_path, mapping_path):
     parameters = pd.read_csv(parameter_path)
     evidence = pd.read_csv(evidence_path)
     mapping = pd.read_csv(mapping_path)
+    if parameters.empty or evidence.empty or mapping.empty:
+        raise ValueError(
+            "Intake requires populated parameter, evidence, and mapping CSVs; "
+            "header-only templates are not validated empirical inputs"
+        )
     validated = validate_technology_parameters(parameters, mapping)
     check_parameter_evidence_coverage(validated, evidence)
     return {
