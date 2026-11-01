@@ -90,6 +90,8 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     if not np.isfinite(objective_weights.to_numpy(dtype=float)).all() or (objective_weights <= 0).any():
         raise ValueError("Invalid objective snapshot weights")
     operating_cost = float(dispatch.mul(hourly_cost).sum(axis=1).mul(objective_weights).sum())
+    if not np.isfinite(operating_cost):
+        raise ValueError("Nonfinite operating cost")
     return {
         "demand_mwh": demand_mwh,
         "generation_mwh": generation_mwh,
