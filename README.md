@@ -239,3 +239,17 @@ equivalence is claimed.
 
 Run: `python -m pytest -q tests/test_parameter_adapter.py`.
 The adapter tests use synthetic parameter fixtures, **not published LUT costs**.
+
+
+## Source-traced numerical acceptance report
+
+Run `python -m lut_to_pypsa.input_acceptance data/derived/lut_continents_2020_verified.csv --year 2020 --output outputs/lut_input_acceptance`.
+This produces `lut_pypsa_input_conservation.csv` with each region's LUT source cell,
+original TWh, expected MWh, actual PyPSA `loads_t.p_set` MWh and difference,
+plus `lut_pypsa_input_manifest.json` with snapshot count and limitations.
+The acceptance fails if annual demand is not conserved within 0.01 MWh.
+Run `python -m pytest -q tests/test_input_acceptance.py` for regression checks.
+
+**Scope:** source-traced 2020 annual electricity energy-service demand, with
+an assumed flat 8,784-hour profile. This is an input translation test only;
+it is not a technology-mix, cost, dispatch, or LUT-ESTM equivalence result.
