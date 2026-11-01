@@ -173,3 +173,14 @@ def test_empirical_mode_accepts_complete_attested_evidence():
     )
     assert "lut_solar" in result.generators.index
     assert "lut_battery" in result.storage_units.index
+
+
+def test_storage_efficiency_is_per_direction_not_round_trip():
+    network, mapping, parameters = fixture()
+    result = attach_reviewed_components(
+        network, parameters, mapping, {"solar": "region_a", "battery": "region_a"}
+    )
+    storage = result.storage_units.loc["lut_battery"]
+    assert storage.efficiency_store == pytest.approx(.9)
+    assert storage.efficiency_dispatch == pytest.approx(.9)
+    assert storage.efficiency_store * storage.efficiency_dispatch == pytest.approx(.81)
