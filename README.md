@@ -223,3 +223,19 @@ Run: `python -m pytest -q tests/test_technology_parameters.py`.
 Next: build source-reviewed LUT parameter tables with actual units and
 time/year comparability, then implement technology-specific PyPSA adapters
 and only then perform matched LUT/PyPSA model comparison.
+
+
+## Reviewed-parameter PyPSA component adapter (unsolved)
+
+`parameter_adapter.attach_reviewed_components(network, parameters, mapping, bus_by_technology)`
+creates a **copy** of a PyPSA network and attaches only `Generator` and
+`StorageUnit` components with explicit, provenance-reviewed MW capacity,
+availability, operating cost, storage efficiency, duration and standing loss.
+It rejects absent costs, unassigned buses, unsupported `Link`/`Store` physics,
+and annualized investment costs without an optimization-period convention.
+The scalar generator availability is an illustrative constant, not a LUT or
+observed hourly availability curve. No optimization or LUT-ESTM/PyPSA output
+equivalence is claimed.
+
+Run: `python -m pytest -q tests/test_parameter_adapter.py`.
+The adapter tests use synthetic parameter fixtures, **not published LUT costs**.
