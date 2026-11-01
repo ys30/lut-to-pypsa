@@ -44,6 +44,7 @@ def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10):
     checks.to_csv(output_dir / "annual_energy_check.csv", index=False)
     report.to_csv(output_dir / "regional_dispatch_audit.csv", index=False)
     solved.export_to_netcdf(output_dir / "illustrative_five_region_solved.nc")
+    hourly.to_csv(output_dir / "lut_hourly_flat_loads.csv", index=False)
     return report
 
 
