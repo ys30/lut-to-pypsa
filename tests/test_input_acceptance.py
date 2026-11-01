@@ -17,6 +17,9 @@ def test_authentic_2020_lut_input_acceptance(tmp_path):
     assert metadata["optimization_executed"] is False
     assert metadata["lut_estm_output_equivalence"] is False
     assert (tmp_path / "lut_pypsa_input_conservation.csv").exists()
+    assert (tmp_path / "lut_load_only.nc").exists()
+    assert metadata["network_scope"] == "source_traced_load_only"
+    assert metadata["network_artifact"] == "lut_load_only.nc"
     manifest = json.loads((tmp_path / "lut_pypsa_input_manifest.json").read_text())
     assert manifest["hourly_profile"] == "flat_assumption"
 
@@ -122,3 +125,20 @@ def test_reject_pypsa_load_matrix_with_wrong_timestamp_index(monkeypatch):
     annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
     with pytest.raises(ValueError, match="PyPSA load timeline mismatch"):
         acceptance.audit_lut_network_inputs(annual)
+
+
+def test_exported_lut_network_roundtrip_preserves_annual_energy(tmp_path):
+    import pypsa
+    source = "data/derived/lut_continents_2020_verified.csv"
+    report, _ = run(source, tmp_path)
+    reloaded = pypsa.Network(str(tmp_path / "lut_load_only.nc"))
+    assert len(reloaded.snapshots) == 8784
+    assert len(reloaded.loads) == 5
+    assert reloaded.generators.empty
+    assert reloaded.storage_units.empty
+    assert reloaded.links.empty
+    assert reloaded.lines.empty
+    assert reloaded.loads_t.p_set.index.equals(reloaded.snapshots)
+    for row in report.itertuples(index=False):
+        observed = float(reloaded.loads_t.p_set["load_" + row.region].sum())
+        assert observed == pytest.approx(row.expected_mwh, abs=0.01)
