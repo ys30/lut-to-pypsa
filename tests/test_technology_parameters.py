@@ -65,3 +65,15 @@ def test_storage_round_trip_basis_is_accepted_at_intake():
     params.loc[params.lut_technology.eq("battery"), "efficiency_basis"] = "round_trip"
     result = validate_technology_parameters(params, mapping)
     assert result.loc[result.lut_technology.eq("battery"), "efficiency_basis"].iloc[0] == "round_trip"
+
+
+@pytest.mark.parametrize("invalid_mapping", [
+    pd.DataFrame(columns=["lut_technology", "pypsa_component"]),
+    pd.DataFrame({"lut_technology": ["solar", None], "pypsa_component": ["Generator", "StorageUnit"]}),
+    pd.DataFrame({"lut_technology": ["solar", "  "], "pypsa_component": ["Generator", "StorageUnit"]}),
+    pd.DataFrame({"lut_technology": ["solar", "battery"], "pypsa_component": ["Generator", None]}),
+])
+def test_reject_incomplete_technology_mapping(invalid_mapping):
+    _, params = fixtures()
+    with pytest.raises(ValueError, match="technology mapping"):
+        validate_technology_parameters(params, invalid_mapping)
