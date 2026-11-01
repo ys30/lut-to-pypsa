@@ -23,6 +23,17 @@ def audit_lut_network_inputs(annual, year=2020, tolerance_mwh=0.01):
         raise ValueError("Missing LUT source cell")
     if not selected.quantity_kind.eq("annual_energy_service_demand").all():
         raise ValueError("Unsupported LUT quantity kind")
+    if selected.region.isna().any() or selected.region.astype(str).str.strip().eq("").any():
+        raise ValueError("Missing LUT region")
+    if selected.region.duplicated().any():
+        raise ValueError("Duplicate LUT region-year record")
+    if selected.source_cell.duplicated().any():
+        raise ValueError("Duplicate LUT source cell")
+    demand = pd.to_numeric(selected.value_twh, errors="coerce")
+    if demand.isna().any() or not demand.map(
+        lambda value: __import__("math").isfinite(value) and value >= 0
+    ).all():
+        raise ValueError("Invalid LUT annual demand")
     hourly = hourly_flat(annual, year)
     network = build_load_network(hourly)
     rows = []
