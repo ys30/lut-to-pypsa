@@ -92,6 +92,19 @@ def export_accepted_load_network(annual, output_path, year=2020):
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(destination)
+    # Verify the on-disk artifact, not just the in-memory input network.
+    import pypsa
+    reloaded = pypsa.Network(str(destination))
+    if not reloaded.snapshots.equals(network.snapshots):
+        raise ValueError("Exported LUT network snapshot mismatch")
+    if set(reloaded.loads.index) != set(network.loads.index):
+        raise ValueError("Exported LUT network load coverage mismatch")
+    if not reloaded.generators.empty or not reloaded.storage_units.empty or not reloaded.links.empty or not reloaded.lines.empty:
+        raise ValueError("Exported LUT network is not load-only")
+    actual = reloaded.loads_t.p_set.reindex(index=network.snapshots, columns=network.loads.index)
+    expected = network.loads_t.p_set.reindex(index=network.snapshots, columns=network.loads.index)
+    if actual.isna().any().any() or not actual.subtract(expected).abs().le(1e-6).all().all():
+        raise ValueError("Exported LUT network hourly load mismatch")
     return destination
 
 
