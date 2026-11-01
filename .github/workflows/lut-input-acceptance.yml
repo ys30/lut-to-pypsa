@@ -22,6 +22,9 @@ jobs:
         run: mkdir -p outputs
       - name: Run LUT-to-PyPSA regression tests
         run: python -m pytest -q --tb=short -ra --junitxml=outputs/pytest-results.xml
+      - name: Diagnose dispatch and energy-accounting regressions
+        if: failure()
+        run: python -m pytest -vv --tb=long tests/test_illustrative_dispatch.py
       - name: Run storage parameter and evidence regression tests separately
         if: failure()
         run: python -m pytest -vv --tb=long tests/test_parameter_adapter.py tests/test_parameter_evidence.py tests/test_technology_parameters.py
