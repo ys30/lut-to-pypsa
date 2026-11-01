@@ -92,3 +92,33 @@ def test_report_rejects_nonphysical_pypsa_load(monkeypatch, invalid):
     annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
     with pytest.raises(ValueError, match="Nonfinite or negative PyPSA hourly load"):
         acceptance.audit_lut_network_inputs(annual)
+
+
+def test_reject_same_length_but_shifted_pypsa_snapshots(monkeypatch):
+    import lut_to_pypsa.input_acceptance as acceptance
+    original = acceptance.build_load_network
+
+    def shifted_network(hourly):
+        network = original(hourly)
+        network.set_snapshots(network.snapshots + pd.Timedelta(hours=1))
+        return network
+
+    monkeypatch.setattr(acceptance, "build_load_network", shifted_network)
+    annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
+    with pytest.raises(ValueError, match="Incomplete or misaligned PyPSA hourly snapshots"):
+        acceptance.audit_lut_network_inputs(annual)
+
+
+def test_reject_pypsa_load_matrix_with_wrong_timestamp_index(monkeypatch):
+    import lut_to_pypsa.input_acceptance as acceptance
+    original = acceptance.build_load_network
+
+    def misindexed_network(hourly):
+        network = original(hourly)
+        network.loads_t.p_set.index = network.loads_t.p_set.index + pd.Timedelta(hours=1)
+        return network
+
+    monkeypatch.setattr(acceptance, "build_load_network", misindexed_network)
+    annual = pd.read_csv("data/derived/lut_continents_2020_verified.csv")
+    with pytest.raises(ValueError, match="PyPSA load timeline mismatch"):
+        acceptance.audit_lut_network_inputs(annual)
