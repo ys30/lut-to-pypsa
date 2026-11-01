@@ -20,6 +20,24 @@ def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10):
     report["solver_status"] = status
     report["termination_condition"] = condition
     report["supply_provenance"] = "assumed_firm_and_shortage_generators"
+    weights = solved.snapshot_weightings["generators"].reindex(solved.snapshots)
+    dispatch = solved.generators_t.p.reindex(index=solved.snapshots)
+    for kind in ("firm", "shortage"):
+        report[f"{kind}_generation_mwh"] = [
+            float(dispatch[f"{kind}_{region}"].mul(weights).sum())
+            for region in report.region
+        ]
+    report["illustrative_dispatch_cost"] = [
+        float(sum(dispatch[g].mul(weights).sum() * solved.generators.at[g, "marginal_cost"]
+                  for g in (f"firm_{region}", f"shortage_{region}")))
+        for region in report.region
+    ]
+    report["shortage_fraction"] = (
+        report.shortage_generation_mwh / report.demand_mwh.where(report.demand_mwh.ne(0))
+    ).fillna(0.0)
+    if ((report.firm_generation_mwh + report.shortage_generation_mwh
+         - report.demand_mwh).abs() > 0.01).any():
+        raise ValueError("Illustrative supply breakdown fails annual demand balance")
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     checks.to_csv(output_dir / "annual_energy_check.csv", index=False)
