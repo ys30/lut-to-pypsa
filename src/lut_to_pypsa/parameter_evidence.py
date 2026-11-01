@@ -60,6 +60,7 @@ def check_parameter_evidence_coverage(parameters, evidence):
     names = {
         "capacity_mw", "availability_fraction", "marginal_cost_eur_per_mwh",
         "efficiency", "max_hours", "standing_loss_per_hour",
+        "capital_cost_eur_per_mw_year",
     }
     needed = set()
     for row in parameters.to_dict("records"):
