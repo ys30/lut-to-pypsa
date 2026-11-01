@@ -93,6 +93,23 @@ examples use explicitly illustrative capacity and cost assumptions.
 
 **Empirical parameter intake:** See [the auditable parameter intake specification](docs/empirical-parameter-intake.md) for required fields, per-value evidence, unit/currency checks, storage efficiency conventions, and the review-to-adapter sequence. This document is a collection and review contract, **not a populated or independently verified empirical parameter dataset**. The illustrative dispatch helper is limited to generator-only, single-bus cases; attaching StorageUnits does not make that helper a storage-capable solver.
 
+### Reviewed-input network construction (no optimization)
+
+The new `lut_to_pypsa.intake_network` entry point connects the validated technology/evidence tables to a fixed-capacity PyPSA network. Required inputs are the populated `technology_parameters.csv`, `parameter_evidence.csv`, technology mapping CSV (`lut_technology,pypsa_component`), technology-to-bus CSV (`lut_technology,bus`), and a snapshot CSV (`snapshot`). Optionally provide hourly load CSV (`snapshot,bus,demand_mw`), with one row per bus and snapshot. All hourly load values are MW; no annual-to-hourly conversion is implied.
+
+```bash
+python -m lut_to_pypsa.intake_network \\
+  --parameters path/to/technology_parameters.csv \\
+  --evidence path/to/parameter_evidence.csv \\
+  --mapping path/to/technology_mapping.csv \\
+  --buses path/to/technology_buses.csv \\
+  --snapshots path/to/snapshots.csv \\
+  --demand path/to/hourly_demand.csv \\
+  --output outputs/reviewed_input_network.nc
+```
+
+The templates in `data/templates/` are intentionally **empty** and cannot be run as empirical inputs. A successful network export does not verify source citations or constitute a successful optimization. The synthetic two-hour integration test exercises the separate generator-only HiGHS solver; storage and multi-bus optimization are **not** supported by that helper.
+
 **Next engineering gate:** publish reviewed generator/storage parameter tables
 with traceable sources, physical units, geographic and temporal coverage, and
 technology-to-bus mapping; only then label a dispatch scenario empirical.
