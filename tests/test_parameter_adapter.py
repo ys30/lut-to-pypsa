@@ -213,16 +213,19 @@ def test_adapter_rejects_existing_component_name_collision():
     assert network.storage_units.empty
 
 
-def test_adapter_rejects_network_without_snapshots():
+def test_adapter_rejects_network_without_snapshots(monkeypatch):
     network, mapping, parameters = fixture()
-    # PyPSA rejects set_snapshots([]); emulate a malformed imported network.
-    network._snapshots = pd.DatetimeIndex([])
+    # PyPSA refuses empty snapshots through its public setter. Patch the
+    # public property on this network's class to test our defensive guard.
+    monkeypatch.setattr(
+        type(network), "snapshots",
+        property(lambda self: pd.DatetimeIndex([])),
+    )
     with pytest.raises(ValueError, match="requires network snapshots"):
         attach_reviewed_components(
             network, parameters, mapping,
             {"solar": "region_a", "battery": "region_a"},
         )
-
 
 def test_adapter_rejects_cross_component_name_collision():
     network, mapping, parameters = fixture()
