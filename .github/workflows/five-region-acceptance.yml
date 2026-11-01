@@ -47,6 +47,21 @@ jobs:
           assert audit.max_abs_balance_mw.max() < 1e-5
           print(audit.to_string(index=False))
           PY
+      - name: Export independent analytical capacity sensitivity
+        run: |
+          python -m lut_to_pypsa.analytical_sensitivity \
+            --annual data/derived/lut_continents_2020_verified.csv \
+            --output outputs/five_region/analytical_sensitivity.csv
+          python - <<'PY'
+          import pandas as pd
+          p = "outputs/five_region/analytical_sensitivity.csv"
+          result = pd.read_csv(p)
+          assert len(result) == 20
+          assert result.region.nunique() == 5
+          assert set(result.assumed_firm_capacity_factor) == {1.0, 0.75, 0.5, 0.25}
+          assert (result.firm_generation_mwh + result.shortage_generation_mwh
+                  - result.demand_mwh).abs().max() < 0.01
+          PY
       - name: Run full-year illustrative five-region solve
         run: |
           python -m lut_to_pypsa.five_region_pipeline \
