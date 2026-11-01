@@ -36,6 +36,8 @@ def validate_technology_parameters(parameters, mapping):
         ("http://", "https://")
     ).all():
         raise ValueError("Invalid parameter source reference")
+    if parameters.source_reference.astype(str).str.strip().eq("").any():
+        raise ValueError("Missing parameter source reference")
     if not pd.to_numeric(parameters.data_year, errors="raise").map(
         lambda x: math.isfinite(x) and x == int(x)
     ).all():
