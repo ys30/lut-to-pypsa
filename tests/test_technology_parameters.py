@@ -77,3 +77,11 @@ def test_reject_incomplete_technology_mapping(invalid_mapping):
     _, params = fixtures()
     with pytest.raises(ValueError, match="(?i)technology mapping"):
         validate_technology_parameters(params, invalid_mapping)
+
+
+@pytest.mark.parametrize("missing_column", ["lut_technology", "pypsa_component"])
+def test_reject_missing_mapping_columns_with_validation_error(missing_column):
+    mapping, params = fixtures()
+    mapping = mapping.drop(columns=[missing_column])
+    with pytest.raises(ValueError, match="Missing technology mapping columns"):
+        validate_technology_parameters(params, mapping)
