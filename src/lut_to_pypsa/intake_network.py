@@ -87,15 +87,15 @@ def main(argv=None):
     parser.add_argument("--summary-json", type=Path,
                         help="Required with --solve-illustrative; write audited solve metrics")
     args = parser.parse_args(argv)
+    if args.solve_illustrative and (args.demand is None or args.summary_json is None):
+        parser.error("--solve-illustrative requires --demand and --summary-json")
+    if not args.solve_illustrative and args.summary_json is not None:
+        parser.error("--summary-json requires --solve-illustrative")
     times = pd.read_csv(args.snapshots)
     if "snapshot" not in times or times.empty:
         raise ValueError("Snapshot CSV must contain populated snapshot column")
     network = build_intake_network(args.parameters, args.evidence, args.mapping,
                                    args.buses, snapshots=times.snapshot, demand_path=args.demand)
-    if args.solve_illustrative and (args.demand is None or args.summary_json is None):
-        parser.error("--solve-illustrative requires --demand and --summary-json")
-    if not args.solve_illustrative and args.summary_json is not None:
-        parser.error("--summary-json requires --solve-illustrative")
     if args.solve_illustrative:
         network, status, condition = solve_illustrative_dispatch(network)
         summary = summarize_illustrative_dispatch(network)
