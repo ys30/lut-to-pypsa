@@ -75,6 +75,7 @@ def test_dispatch_audit_respects_nonuniform_snapshot_weights():
     network = pypsa.Network()
     network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
     network.snapshot_weightings["generators"] = pd.Series([1.0, 2.0], index=network.snapshots, dtype=float)
+    network.snapshot_weightings["objective"] = pd.Series([1.0, 2.0], index=network.snapshots, dtype=float)
     network.add("Bus", "test")
     network.add("Load", "demand", bus="test", p_set=10.0)
     network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
@@ -94,4 +95,31 @@ def test_dispatch_audit_rejects_canceling_hourly_imbalances():
     solved, _, _ = solve_illustrative_dispatch(network)
     solved.generators_t.p.loc[:, "supply"] = [9.0, 11.0]
     with pytest.raises(ValueError, match="Hourly dispatch energy imbalance"):
+        summarize_illustrative_dispatch(solved)
+
+
+def test_dispatch_cost_uses_objective_not_generator_weights():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.snapshot_weightings["generators"] = pd.Series([1.0, 2.0], index=network.snapshots, dtype=float)
+    network.snapshot_weightings["objective"] = pd.Series([2.0, 3.0], index=network.snapshots, dtype=float)
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    report = summarize_illustrative_dispatch(solved)
+    assert report["generation_mwh"] == pytest.approx(30.0)
+    assert report["operating_cost_eur"] == pytest.approx(250.0)
+
+
+@pytest.mark.parametrize("bad_value", [float("inf"), float("-inf")])
+def test_dispatch_audit_rejects_nonfinite_generation(bad_value):
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    solved.generators_t.p.loc[network.snapshots[0], "supply"] = bad_value
+    with pytest.raises(ValueError, match="Nonfinite generator dispatch"):
         summarize_illustrative_dispatch(solved)
