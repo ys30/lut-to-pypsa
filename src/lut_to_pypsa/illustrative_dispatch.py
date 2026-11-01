@@ -46,7 +46,14 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     dispatch = network.generators_t.p.reindex(index=snapshots, columns=network.generators.index)
     if dispatch.isna().any().any():
         raise ValueError("Missing solved generator dispatch")
-    demand = network.loads_t.p_set.reindex(index=snapshots, columns=network.loads.index)
+    # PyPSA permits constant Load.p_set values without a loads_t.p_set column.
+    # Broadcast static setpoints, then override with any explicit time series.
+    demand = pd.DataFrame(
+        {name: float(value) for name, value in network.loads.p_set.items()},
+        index=snapshots,
+    )
+    for name in network.loads_t.p_set.columns.intersection(network.loads.index):
+        demand[name] = network.loads_t.p_set[name].reindex(snapshots)
     if demand.isna().any().any():
         raise ValueError("Missing hourly demand")
     weights = network.snapshot_weightings["generators"].reindex(snapshots)
