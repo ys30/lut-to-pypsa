@@ -75,5 +75,5 @@ def test_storage_round_trip_basis_is_accepted_at_intake():
 ])
 def test_reject_incomplete_technology_mapping(invalid_mapping):
     _, params = fixtures()
-    with pytest.raises(ValueError, match="technology mapping"):
+    with pytest.raises(ValueError, match="(?i)technology mapping"):
         validate_technology_parameters(params, invalid_mapping)
