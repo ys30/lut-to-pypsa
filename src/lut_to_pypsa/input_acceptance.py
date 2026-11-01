@@ -83,6 +83,18 @@ def audit_lut_network_inputs(annual, year=2020, tolerance_mwh=0.01):
     return report, metadata
 
 
+def export_accepted_load_network(annual, output_path, year=2020):
+    """Write an audited load-only PyPSA network; no dispatch or calibration."""
+    audit_lut_network_inputs(annual, year=year)
+    network = build_load_network(hourly_flat(annual, year))
+    if not network.generators.empty or not network.storage_units.empty:
+        raise ValueError("Expected load-only network")
+    destination = Path(output_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    network.export_to_netcdf(destination)
+    return destination
+
+
 def run(source_csv, output_dir, year=2020):
     report, metadata = audit_lut_network_inputs(pd.read_csv(source_csv), year)
     out = Path(output_dir)
