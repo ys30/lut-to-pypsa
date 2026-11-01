@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import pypsa
 
-from lut_to_pypsa.illustrative_dispatch import solve_illustrative_dispatch
+from lut_to_pypsa.illustrative_dispatch import solve_illustrative_dispatch, summarize_illustrative_dispatch
 
 
 def test_synthetic_dispatch_balances_load():
@@ -29,3 +29,29 @@ def test_dispatch_rejects_missing_load():
     network.add("Generator", "supply", bus="test", p_nom=20.0)
     with pytest.raises(ValueError, match="Load"):
         solve_illustrative_dispatch(network)
+
+
+def test_synthetic_dispatch_energy_and_cost_audit():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=3, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=10.0)
+    network.add("Generator", "supply", bus="test", p_nom=20.0, marginal_cost=5.0)
+    solved, _, _ = solve_illustrative_dispatch(network)
+    report = summarize_illustrative_dispatch(solved)
+    assert report["demand_mwh"] == pytest.approx(30.0)
+    assert report["generation_mwh"] == pytest.approx(30.0)
+    assert report["imbalance_mwh"] == pytest.approx(0.0)
+    assert report["operating_cost_eur"] == pytest.approx(150.0)
+    assert report["scope"] == "synthetic_single_bus_generator_only"
+
+
+def test_dispatch_audit_rejects_storage_scope():
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=1, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "demand", bus="test", p_set=1.0)
+    network.add("Generator", "supply", bus="test", p_nom=2.0)
+    network.add("StorageUnit", "battery", bus="test", p_nom=1.0, max_hours=2.0)
+    with pytest.raises(ValueError, match="generator-only"):
+        summarize_illustrative_dispatch(network)
