@@ -75,16 +75,21 @@ def summarize_illustrative_dispatch(solved_network, *, tolerance_mwh=1e-5):
     imbalance_mwh = generation_mwh - demand_mwh
     if abs(imbalance_mwh) > tolerance_mwh:
         raise ValueError(f"Dispatch energy imbalance: {imbalance_mwh} MWh")
-    # Static-cost audit must not silently ignore time-varying PyPSA costs.
-    if len(network.generators_t.marginal_cost.columns.intersection(network.generators.index)):
-        raise ValueError("Time-varying generator marginal costs are not supported by this summary")
     marginal_cost = pd.to_numeric(network.generators.marginal_cost, errors="raise")
-    if marginal_cost.isna().any():
-        raise ValueError("Missing generator marginal cost")
+    if marginal_cost.isna().any() or not np.isfinite(marginal_cost.to_numpy(dtype=float)).all():
+        raise ValueError("Invalid generator marginal cost")
+    # Broadcast static costs and override with time-varying costs where provided.
+    hourly_cost = pd.DataFrame(
+        {name: float(value) for name, value in marginal_cost.items()}, index=snapshots
+    )
+    for name in network.generators_t.marginal_cost.columns.intersection(network.generators.index):
+        hourly_cost[name] = network.generators_t.marginal_cost[name].reindex(snapshots)
+    if not np.isfinite(hourly_cost.to_numpy(dtype=float)).all():
+        raise ValueError("Invalid time-varying generator marginal cost")
     objective_weights = network.snapshot_weightings["objective"].reindex(snapshots)
     if not np.isfinite(objective_weights.to_numpy(dtype=float)).all() or (objective_weights <= 0).any():
         raise ValueError("Invalid objective snapshot weights")
-    operating_cost = float(dispatch.mul(marginal_cost, axis=1).sum(axis=1).mul(objective_weights).sum())
+    operating_cost = float(dispatch.mul(hourly_cost).sum(axis=1).mul(objective_weights).sum())
     return {
         "demand_mwh": demand_mwh,
         "generation_mwh": generation_mwh,
