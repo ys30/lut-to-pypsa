@@ -3,12 +3,14 @@
 This does not independently verify citations, calibrate demand, or optimize.
 """
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
 import pypsa
 
 from .parameter_intake_cli import validate_intake
+from .illustrative_dispatch import solve_illustrative_dispatch, summarize_illustrative_dispatch
 from .parameter_adapter import attach_reviewed_components
 
 
@@ -74,17 +76,33 @@ def main(argv=None):
                         help="CSV with a snapshot column")
     parser.add_argument("--demand", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--solve-illustrative", action="store_true",
+                        help="Run only the supported synthetic single-bus generator-only dispatch")
+    parser.add_argument("--summary-json", type=Path,
+                        help="Required with --solve-illustrative; write audited solve metrics")
     args = parser.parse_args(argv)
     times = pd.read_csv(args.snapshots)
     if "snapshot" not in times or times.empty:
         raise ValueError("Snapshot CSV must contain populated snapshot column")
     network = build_intake_network(args.parameters, args.evidence, args.mapping,
                                    args.buses, snapshots=times.snapshot, demand_path=args.demand)
+    if args.solve_illustrative:
+        if args.demand is None or args.summary_json is None:
+            parser.error("--solve-illustrative requires --demand and --summary-json")
+        network, status, condition = solve_illustrative_dispatch(network)
+        summary = summarize_illustrative_dispatch(network)
+        summary.update({"solver_status": status, "termination_condition": condition})
+        args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_json.write_text(json.dumps(summary, indent=2) + "\\n", encoding="utf-8")
+    elif args.summary_json is not None:
+        parser.error("--summary-json requires --solve-illustrative")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(args.output)
     print(f"Exported {len(network.snapshots)} snapshots, {len(network.generators)} "
           f"generators and {len(network.storage_units)} storage units; "
-          "no optimization or independent source verification performed.")
+          ("illustrative dispatch solved; source citations not independently verified."
+           if args.solve_illustrative else
+           "no optimization or independent source verification performed."))
 
 
 if __name__ == "__main__":
