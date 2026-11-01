@@ -148,7 +148,7 @@ def test_dispatch_audit_rejects_load_on_different_bus():
         summarize_illustrative_dispatch(network)
 
 
-def test_dispatch_audit_rejects_time_varying_marginal_costs():
+def test_dispatch_audit_supports_time_varying_marginal_costs():
     network = pypsa.Network()
     network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
     network.add("Bus", "test")
@@ -156,5 +156,6 @@ def test_dispatch_audit_rejects_time_varying_marginal_costs():
     network.add("Generator", "supply", bus="test", p_nom=20.0,
                 marginal_cost=pd.Series([5.0, 10.0], index=network.snapshots))
     solved, _, _ = solve_illustrative_dispatch(network)
-    with pytest.raises(ValueError, match="Time-varying generator marginal costs"):
-        summarize_illustrative_dispatch(solved)
+    report = summarize_illustrative_dispatch(solved)
+    assert report["operating_cost_eur"] == pytest.approx(150.0)
+    assert report["generation_mwh"] == pytest.approx(20.0)
