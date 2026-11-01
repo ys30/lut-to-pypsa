@@ -133,6 +133,50 @@ jobs:
           print(comparison[["region", "shortage_fraction_solver",
                             "shortage_generation_mwh_solver"]].to_string(index=False))
           PY
+      - name: Solve remaining full-year capacity sensitivity scenarios
+        run: |
+          for factor in 0.75 0.25; do
+            label="${factor/./}"
+            python -m lut_to_pypsa.five_region_pipeline \
+              --annual data/derived/lut_continents_2020_verified.csv \
+              --year 2020 \
+              --firm-capacity-factor "$factor" \
+              --output "outputs/five_region_factor_${label}"
+          done
+      - name: Cross-check all four annual solver scenarios
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          from lut_to_pypsa.analytical_sensitivity import expected_dispatch
+          source = "data/derived/lut_continents_2020_verified.csv"
+          scenarios = [(1.0, "outputs/five_region"),
+                       (0.75, "outputs/five_region_factor_075"),
+                       (0.5, "outputs/five_region_stress50"),
+                       (0.25, "outputs/five_region_factor_025")]
+          results = []
+          for factor, directory in scenarios:
+              audit = pd.read_csv(Path(directory) / "regional_dispatch_audit.csv")
+              reference = expected_dispatch(source, firm_capacity_factor=factor)
+              merged = audit.merge(reference, on="region", suffixes=("_solver", "_expected"), validate="one_to_one")
+              assert len(merged) == 5
+              assert set(merged.solver_status) == {"ok"}
+              assert set(merged.termination_condition) == {"optimal"}
+              assert merged.max_abs_balance_mw.max() < 1e-5
+              for field in ("demand_mwh", "firm_generation_mwh", "shortage_generation_mwh",
+                            "shortage_fraction", "illustrative_dispatch_cost"):
+                  actual = merged[f"{field}_solver"]
+                  expected = merged[f"{field}_expected"]
+                  assert ((actual - expected).abs() <= (0.01 + 1e-9 * expected.abs())).all(), (factor, field)
+              merged["capacity_factor"] = factor
+              results.append(merged)
+          combined = pd.concat(results, ignore_index=True)
+          assert len(combined) == 20
+          combined.to_csv("outputs/five_region/solver_sensitivity_all_four.csv", index=False)
+          print(combined.groupby("capacity_factor").agg(
+              shortage_mwh=("shortage_generation_mwh_solver", "sum"),
+              shortage_fraction=("shortage_fraction_solver", "mean")).to_string())
+          PY
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
@@ -175,5 +219,7 @@ jobs:
           path: |
             outputs/five_region/
             outputs/five_region_stress50/
+            outputs/five_region_factor_075/regional_dispatch_audit.csv
+            outputs/five_region_factor_025/regional_dispatch_audit.csv
             outputs/figures/
           if-no-files-found: warn
