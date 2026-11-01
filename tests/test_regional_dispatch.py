@@ -52,3 +52,17 @@ def test_shortage_proxy_activates_when_firm_capacity_is_insufficient():
     assert report.demand_mwh.iloc[0] == pytest.approx(18)
     assert report.generation_mwh.iloc[0] == pytest.approx(18)
     assert report.max_abs_balance_mw.max() < 1e-5
+
+
+def test_capacity_derating_changes_shortage_dispatch():
+    from lut_to_pypsa.benchmark import add_illustrative_supply
+    network = pypsa.Network()
+    network.set_snapshots(pd.date_range("2020-01-01", periods=2, freq="h"))
+    network.add("Bus", "test")
+    network.add("Load", "load_test", bus="test", p_set=[8, 10])
+    add_illustrative_supply(network, reserve_margin=0.0, firm_capacity_factor=0.5)
+    assert network.generators.at["firm_test", "p_nom"] == pytest.approx(5)
+    solved, report, status, condition = solve_regional_dispatch(network)
+    assert (status, condition) == ("ok", "optimal")
+    assert solved.generators_t.p["shortage_test"].tolist() == pytest.approx([3, 5])
+    assert report.max_abs_balance_mw.max() < 1e-5
