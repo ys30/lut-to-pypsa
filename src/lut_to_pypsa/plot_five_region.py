@@ -89,6 +89,33 @@ def plot_results(base_dir, stress_dir, output_dir):
     fig.tight_layout()
     fig.savefig(output_dir / "five_region_capacity_sensitivity.png", dpi=180)
     plt.close(fig)
+    phase_path = base_dir / "amplitude_phase_sensitivity.csv"
+    if phase_path.exists():
+        phase = pd.read_csv(phase_path)
+        expected = {(a, h) for a in (0.0, 0.1, 0.2) for h in (6, 18)}
+        actual = set(zip(phase.demand_amplitude, phase.trough_hour))
+        if len(phase) != 6 or actual != expected:
+            raise ValueError("Incomplete six-scenario amplitude-phase sensitivity table")
+        if phase.shortage_proxy_twh.isna().any() or (phase.shortage_proxy_twh < 0).any():
+            raise ValueError("Invalid amplitude-phase shortage values")
+        fig, ax = plt.subplots(figsize=(8.6, 5.2))
+        for hour, color, label in ((6, "#4477AA", "06:00 supply trough"),
+                                   (18, "#CC6677", "18:00 supply trough")):
+            series = phase.loc[phase.trough_hour == hour].sort_values("demand_amplitude")
+            ax.plot(series.demand_amplitude * 100, series.shortage_proxy_twh,
+                    marker="o", linewidth=2.2, markersize=7, color=color, label=label)
+        ax.set(xlabel="Synthetic diurnal demand amplitude (%)",
+               ylabel="Annual shortage proxy (TWh)",
+               title="Illustrative load-amplitude × supply-phase sensitivity")
+        ax.grid(alpha=0.2)
+        ax.legend(frameon=False)
+        fig.text(0.5, 0.01,
+                 "Full-year PyPSA solves; fixed assumed capacity; synthetic profiles, not observed outages",
+                 ha="center", fontsize=8, color="#555555")
+        fig.tight_layout(rect=(0, 0.05, 1, 1))
+        fig.savefig(output_dir / "five_region_amplitude_phase_sensitivity.png", dpi=180)
+        plt.close(fig)
+
     return sorted(str(p) for p in output_dir.glob("five_region_*.png"))
 
 
