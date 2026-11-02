@@ -10,7 +10,7 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 - Validates required columns, nulls, unique region/generator IDs, valid region references, nonnegative capacities/costs/demand, timestamps, unique region–snapshot pairs, and complete region coverage.
 - Converts demand expressed as **GWh per one-hour interval** to PyPSA load `p_set` in **MW** (`GWh × 1000 / 1 hour`). The one-hour assumption is explicit and must be revised for other time resolutions.
-- Creates three independent regional buses, six generators and 24 hourly snapshots. **There are no transmission links, storage, capacity-expansion decisions, or multi-sector coupling** in this demonstration.
+- The original small demonstration creates three independent regional buses, six generators and 24 hourly snapshots; the separate **five-continent acceptance pipeline** instead runs 8,784 hourly snapshots for 2020 with five regional buses and illustrative firm/shortage generators. **Neither setup includes transmission links, storage, capacity-expansion decisions, or multi-sector coupling.**
 - Optionally solves dispatch with HiGHS and exports a PyPSA NetCDF network.
 - Includes unit tests, a PyPSA integration test, notebooks, and GitHub Actions.
 
