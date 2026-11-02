@@ -392,7 +392,7 @@ jobs:
           summary = ["## Five-region LUT-to-PyPSA acceptance",
                      "Supply is illustrative; LUT inputs are annual energy-service demand.",
                      ""]
-          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv", "../five_region_stress50/solver_vs_analytical.csv"):
+          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv", "../five_region_stress50/solver_vs_analytical.csv", "availability40_factor90_shape_control.csv", "availability_phase_shift_control.csv"):
               path = Path("outputs/five_region") / name
               if path.exists():
                   frame = pd.read_csv(path)
