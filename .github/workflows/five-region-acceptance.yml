@@ -368,6 +368,49 @@ jobs:
           print("Trough06 diurnal shortage TWh:", merged.shortage_generation_mwh_trough06.sum()/1e6)
           print("Phase shift delta TWh:", merged.phase_shift_delta_twh.sum())
           PY
+      - name: Solve 00:00 and 12:00 supply trough sensitivity
+        run: |
+          for hour in 0 12; do
+            python -m lut_to_pypsa.five_region_pipeline \
+              --annual data/derived/lut_continents_2020_verified.csv \
+              --year 2020 \
+              --load-profile diurnal \
+              --diurnal-amplitude 0.20 \
+              --firm-capacity-factor 0.9 \
+              --capacity-reference flat_reference \
+              --firm-availability-amplitude 0.4 \
+              --availability-trough-hour "$hour" \
+              --output "outputs/five_region_availability40_factor90_trough${hour}"
+          done
+      - name: Audit four-phase sensitivity curve
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          paths = {
+              0: "outputs/five_region_availability40_factor90_trough0/regional_dispatch_audit.csv",
+              6: "outputs/five_region_availability40_factor90_trough06/regional_dispatch_audit.csv",
+              12: "outputs/five_region_availability40_factor90_trough12/regional_dispatch_audit.csv",
+              18: "outputs/five_region_availability40_factor90_diurnal/regional_dispatch_audit.csv",
+          }
+          rows = []
+          baseline = None
+          for hour, path in paths.items():
+              df = pd.read_csv(path).sort_values("region").reset_index(drop=True)
+              assert len(df) == 5 and set(df.solver_status) == {"ok"}
+              assert set(df.termination_condition) == {"optimal"}
+              assert df.max_abs_balance_mw.max() < 1e-5
+              if baseline is None:
+                  baseline = df
+              else:
+                  assert (df.demand_mwh - baseline.demand_mwh).abs().max() < 0.01
+                  assert (df.firm_capacity_mw - baseline.firm_capacity_mw).abs().max() < 1e-5
+              rows.append({"trough_hour": hour, "shortage_proxy_twh": df.shortage_generation_mwh.sum()/1e6})
+          out = pd.DataFrame(rows).sort_values("trough_hour")
+          out["delta_vs_18_twh"] = out.shortage_proxy_twh - float(out.loc[out.trough_hour == 18, "shortage_proxy_twh"].iloc[0])
+          out.to_csv("outputs/five_region/availability_four_phase_sensitivity.csv", index=False)
+          print("Four-phase sensitivity TWh:")
+          print(out.to_string(index=False))
+          PY
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
