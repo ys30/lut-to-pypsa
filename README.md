@@ -6,6 +6,8 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 > **Data provenance and limitations:** The repository includes both **synthetic demonstration inputs** and a small, **source-cell-traced authentic LUT-DEMAND v1.1 annual electricity energy-service-demand fixture** (2020, five continents; `data/derived/lut_continents_2020_verified.csv`). The original workbook is not bundled. Hourly shapes, firm generation and shortage generators are illustrative assumptions, not observed data. This project does **not** establish LUT-ESTM/PyPSA output equivalence or calibration.
 
+**Verification and scientific scope:** [Read the project audit and limitations](docs/VERIFICATION_AND_LIMITATIONS.md), including verified CI, controlled sensitivity results, known confounding, and the boundary between a portfolio demonstration and calibrated empirical research.
+
 ## What it does
 
 - Validates required columns, nulls, unique region/generator IDs, valid region references, nonnegative capacities/costs/demand, timestamps, unique region–snapshot pairs, and complete region coverage.
