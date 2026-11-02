@@ -10,6 +10,13 @@ Last reviewed: 2026-11-01. Repository: `ys30/lut-to-pypsa`.
 - **Quality gates:** unit tests, LUT input/parameter acceptance, PyPSA integration, and five-region annual acceptance all passed at commit `9eb75518`. [Five-region acceptance](https://github.com/ys30/lut-to-pypsa/actions/runs/41400565389).
 - **Reproducible figures:** the acceptance workflow checks four expected PNG outputs, including the six-scenario amplitude × phase chart. The README includes a versioned SVG based on the verified rounded scenario totals.
 
+## Latest verified release baseline
+
+- **Commit:** `061ceef3` (README documents the automated figure consistency gate).
+- **Four CI checks passed:** [five-region annual acceptance #41401811304](https://github.com/ys30/lut-to-pypsa/actions/runs/41401811304), [tests #41401811269](https://github.com/ys30/lut-to-pypsa/actions/runs/41401811269), [PyPSA integration #41401811249](https://github.com/ys30/lut-to-pypsa/actions/runs/41401811249), and [LUT input/parameter acceptance #41401811247](https://github.com/ys30/lut-to-pypsa/actions/runs/41401811247).
+- **Figure reproducibility gate:** the acceptance workflow regenerates the six-scenario CSV, validates all six cases against the versioned SVG metadata within 0.0005 TWh, and renders four PNG figures. This is a numerical-data consistency check; it does not pixel-compare the plotted SVG geometry to its metadata.
+- **Maintenance rule:** any change to the synthetic dispatch assumptions or the six-scenario numerical results requires updating the versioned SVG, rerunning the complete acceptance workflow, and revising the README interpretation.
+
 ## Main controlled numerical result
 
 With the same annual demand and installed firm capacity, an assumed 90% firm-capacity factor, 20% synthetic demand amplitude, and 40% synthetic availability dip:
