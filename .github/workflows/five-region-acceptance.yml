@@ -463,6 +463,11 @@ jobs:
           print("Amplitude-phase sensitivity TWh:")
           print(out.to_string(index=False))
           PY
+      - name: Verify capacity sensitivity SVG against four solved scenarios
+        run: |
+          python -m lut_to_pypsa.verify_capacity_svg \
+            --csv outputs/five_region/solver_sensitivity_all_four.csv \
+            --svg docs/figures/five_region_capacity_sensitivity.svg
       - name: Verify stacked stress SVG against solved regional dispatch
         run: |
           python -m lut_to_pypsa.verify_stress_svg \
