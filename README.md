@@ -14,7 +14,12 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 - Optionally solves dispatch with HiGHS and exports a PyPSA NetCDF network.
 - Includes unit tests, a PyPSA integration test, notebooks, and GitHub Actions.
 
-## Verified synthetic diurnal-load sensitivity (November 2026)
+## Verified five-continent illustrative dispatch sensitivities (November 2026)
+
+**Key controlled finding:** With the same installed firm capacity and the same source-traced annual energy demand, a synthetic 20% evening demand peak aligned with a synthetic 40% firm-availability dip increases the annual shortage **proxy** from **4,677.433 TWh** (06:00 availability trough) to **5,579.834 TWh** (18:00 trough), a difference of **902.402 TWh**. This is a **conditional model sensitivity**, not a prediction of real electricity shortages.
+
+**Reproducibility:** [View the passing four-workflow verification at commit d21b7ec](https://github.com/ys30/lut-to-pypsa/actions/runs/41398930061), inspect the [six-scenario audit](https://github.com/ys30/lut-to-pypsa/actions/runs/41392582624), or use the versioned figure and the downloadable CSV/PNG artifact below.
+
 
 **CI verified:** [five-region acceptance run #41363699243](https://github.com/ys30/lut-to-pypsa/actions/runs/41363699243) completed successfully, including the full-year (8,784-hour) synthetic diurnal-load PyPSA solve, energy-balance audit, and comparison with the flat-load 50%-firm-capacity stress case. The existing four full-year capacity scenarios and visualization checks also passed.
 
