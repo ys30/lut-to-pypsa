@@ -473,7 +473,9 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           figures = list(Path("outputs/figures").glob("five_region_*.png"))
-          assert len(figures) == 3
+          expected = {"five_region_annual_demand.png", "five_region_stress50_dispatch.png",
+                      "five_region_capacity_sensitivity.png", "five_region_amplitude_phase_sensitivity.png"}
+          assert {p.name for p in figures} == expected
           assert all(p.stat().st_size > 10000 for p in figures)
           print([str(p) for p in figures])
           PY
