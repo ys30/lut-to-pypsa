@@ -22,6 +22,26 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Time-varying supply and load-timing sensitivity (verified)
+
+[Full-year five-region acceptance run #41388435458](https://github.com/ys30/lut-to-pypsa/actions/runs/41388435458) solved two additional fixed-nameplate scenarios with an illustrative 18:00 firm-availability dip (amplitude 0.4; minimum availability 60%). Both use the same source-traced 2020 LUT annual demand, 8,784 hours, identical installed firm capacities, and identical hour-by-hour availability constraints.
+
+| Assumed firm-capacity factor | Flat demand shortage proxy (TWh) | Synthetic diurnal demand shortage proxy (TWh) | Shape-only change (TWh) |
+| --- | ---: | ---: | ---: |
+| 0.50 | 12,593.088 | 12,593.088 | ≈0 |
+| 0.90 | 4,677.433 | 5,579.834 | **+902.402** |
+
+At 90% capacity, the synthetic 18:00 demand peak coincides with the imposed 18:00 supply-availability trough, increasing the modeled shortage proxy by **19.29%** relative to the flat-load case. At 50% capacity, the assumed system is shortage-constrained essentially throughout the day, and reshaping annual-conserving load leaves total shortage unchanged. These outcomes are **conditional on invented hourly patterns and capacity assumptions**, not calibrated reliability estimates.
+
+Reproduce the 90% experiment:
+
+```bash
+python -m lut_to_pypsa.five_region_pipeline --firm-capacity-factor 0.9 --capacity-reference flat_reference --firm-availability-amplitude 0.4 --load-profile flat --output outputs/availability40_flat90
+python -m lut_to_pypsa.five_region_pipeline --firm-capacity-factor 0.9 --capacity-reference flat_reference --firm-availability-amplitude 0.4 --load-profile diurnal --diurnal-amplitude 0.2 --output outputs/availability40_diurnal90
+```
+
+CI exports `outputs/five_region/availability40_factor90_shape_control.csv` with region-level comparisons. The model still has no empirical hourly demand, observed generation, interregional lines, or storage.
+
 ### Fixed-capacity control: validated causal decomposition of model assumptions
 
 [Successful full-year PyPSA acceptance run #41386235585](https://github.com/ys30/lut-to-pypsa/actions/runs/41386235585) held the illustrative firm generator capacity constant while changing the hourly demand shape. All three scenarios retain identical LUT annual demand, 50% assumed firm-capacity factor, 10% reserve margin, and 8,784 hourly snapshots.
