@@ -487,7 +487,7 @@ jobs:
           summary = ["## Five-region LUT-to-PyPSA acceptance",
                      "Supply is illustrative; LUT inputs are annual energy-service demand.",
                      ""]
-          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv", "../five_region_stress50/solver_vs_analytical.csv", "availability40_factor90_shape_control.csv", "availability_phase_shift_control.csv", "availability_four_phase_sensitivity.csv"):
+          for name in ("analytical_sensitivity.csv", "regional_dispatch_audit.csv", "../five_region_stress50/solver_vs_analytical.csv", "availability40_factor90_shape_control.csv", "availability_phase_shift_control.csv", "availability_four_phase_sensitivity.csv", "amplitude_phase_sensitivity.csv"):
               path = Path("outputs/five_region") / name
               if path.exists():
                   frame = pd.read_csv(path)
@@ -517,4 +517,5 @@ jobs:
             outputs/five_region_availability40_factor90_diurnal/regional_dispatch_audit.csv
             outputs/five_region_availability40_factor90_trough06/regional_dispatch_audit.csv
             outputs/five_region/availability_four_phase_sensitivity.csv
+            outputs/five_region/amplitude_phase_sensitivity.csv
           if-no-files-found: warn
