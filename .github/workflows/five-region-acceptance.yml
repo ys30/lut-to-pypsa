@@ -265,6 +265,44 @@ jobs:
           print("Load-shape-only delta TWh:", result.load_shape_only_delta_twh.sum())
           print("Capacity-resizing delta TWh:", result.capacity_resizing_delta_twh.sum())
           PY
+      - name: Solve full-year time-varying firm availability with fixed capacity
+        run: |
+          for profile in flat diurnal; do
+            python -m lut_to_pypsa.five_region_pipeline \
+              --annual data/derived/lut_continents_2020_verified.csv \
+              --year 2020 \
+              --load-profile "$profile" \
+              --diurnal-amplitude 0.20 \
+              --firm-capacity-factor 0.5 \
+              --capacity-reference flat_reference \
+              --firm-availability-amplitude 0.4 \
+              --output "outputs/five_region_availability40_${profile}"
+          done
+      - name: Audit fixed-capacity time-varying supply comparison
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          base = pd.read_csv("outputs/five_region_stress50/regional_dispatch_audit.csv")
+          flat = pd.read_csv("outputs/five_region_availability40_flat/regional_dispatch_audit.csv")
+          diurnal = pd.read_csv("outputs/five_region_availability40_diurnal/regional_dispatch_audit.csv")
+          merged = flat.merge(diurnal, on="region", suffixes=("_flat", "_diurnal"), validate="one_to_one")
+          assert len(merged) == 5
+          assert set(flat.solver_status) == {"ok"}
+          assert set(diurnal.solver_status) == {"ok"}
+          assert set(flat.termination_condition) == {"optimal"}
+          assert set(diurnal.termination_condition) == {"optimal"}
+          assert flat.max_abs_balance_mw.max() < 1e-5
+          assert diurnal.max_abs_balance_mw.max() < 1e-5
+          assert (merged.firm_capacity_mw_flat - merged.firm_capacity_mw_diurnal).abs().max() < 1e-5
+          assert (merged.demand_mwh_flat - merged.demand_mwh_diurnal).abs().max() < 0.01
+          assert (flat.shortage_generation_mwh.to_numpy() + 0.01 >= base.shortage_generation_mwh.to_numpy()).all()
+          merged["load_shape_delta_twh"] = (
+              merged.shortage_generation_mwh_diurnal - merged.shortage_generation_mwh_flat) / 1e6
+          merged.to_csv("outputs/five_region/availability40_load_shape_control.csv", index=False)
+          print("Availability-dip flat shortage TWh:", merged.shortage_generation_mwh_flat.sum()/1e6)
+          print("Availability-dip diurnal shortage TWh:", merged.shortage_generation_mwh_diurnal.sum()/1e6)
+          print("Availability-dip load-shape delta TWh:", merged.load_shape_delta_twh.sum())
+          PY
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
@@ -313,4 +351,6 @@ jobs:
             outputs/five_region_diurnal_stress50/regional_dispatch_audit.csv
             outputs/five_region_diurnal_stress50/annual_energy_check.csv
             outputs/five_region_diurnal_fixed_capacity/regional_dispatch_audit.csv
+            outputs/five_region_availability40_flat/regional_dispatch_audit.csv
+            outputs/five_region_availability40_diurnal/regional_dispatch_audit.csv
           if-no-files-found: warn
