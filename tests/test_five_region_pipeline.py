@@ -103,3 +103,30 @@ def test_synthetic_firm_availability_dip_is_bounded():
     assert availability.min() == pytest.approx(0.6)
     assert availability.max() == pytest.approx(1.0)
     assert availability[18] == pytest.approx(0.6)
+
+
+
+def test_time_varying_firm_availability_changes_dispatch(tmp_path):
+    """24-hour solver test proves the synthetic availability constraint binds."""
+    from lut_to_pypsa.hourly import hourly_flat, build_load_network
+    from lut_to_pypsa.benchmark import add_illustrative_supply
+    from lut_to_pypsa.regional_dispatch import solve_regional_dispatch
+    import numpy as np
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    annual = pd.read_csv(source)
+    hourly = hourly_flat(annual, 2020)
+    day = hourly.loc[hourly.timestamp < pd.Timestamp("2020-01-02")]
+    network = add_illustrative_supply(build_load_network(day), firm_capacity_factor=1.0)
+    availability = 1 - 0.4 * (1 + np.cos(
+        2 * np.pi * (network.snapshots.hour.to_numpy() - 18) / 24)) / 2
+    network.generators_t.p_max_pu = pd.DataFrame(
+        {f"firm_{region}": availability for region in network.buses.index},
+        index=network.snapshots)
+    solved, report, status, condition = solve_regional_dispatch(network)
+    assert (status, condition) == ("ok", "optimal")
+    assert report.max_abs_balance_mw.max() < 1e-5
+    for region in solved.buses.index:
+        firm = solved.generators_t.p[f"firm_{region}"]
+        cap = float(solved.generators.at[f"firm_{region}", "p_nom"])
+        assert (firm.to_numpy() <= cap * availability + 1e-5).all()
+        assert solved.generators_t.p[f"shortage_{region}"].max() > 0
