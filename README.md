@@ -14,6 +14,21 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 - Optionally solves dispatch with HiGHS and exports a PyPSA NetCDF network.
 - Includes unit tests, a PyPSA integration test, notebooks, and GitHub Actions.
 
+## Verified synthetic diurnal-load sensitivity (November 2026)
+
+**CI verified:** [five-region acceptance run #41363699243](https://github.com/ys30/lut-to-pypsa/actions/runs/41363699243) completed successfully, including the full-year (8,784-hour) synthetic diurnal-load PyPSA solve, energy-balance audit, and comparison with the flat-load 50%-firm-capacity stress case. The existing four full-year capacity scenarios and visualization checks also passed.
+
+This is a **methodological sensitivity test**, not a measured electricity load curve: `hourly_diurnal` uses a daily cosine pattern with default amplitude 0.20 and an illustrative 18:00 peak, preserving each continent's original annual LUT demand. No observed hourly regional demand, generation mix, interconnection, or storage is inferred.
+
+Reproduce the two directly comparable full-year stress scenarios:
+
+```bash
+python -m lut_to_pypsa.five_region_pipeline --firm-capacity-factor 0.5 --load-profile flat --output outputs/five_region_stress50
+python -m lut_to_pypsa.five_region_pipeline --firm-capacity-factor 0.5 --load-profile diurnal --diurnal-amplitude 0.20 --output outputs/five_region_diurnal_stress50
+```
+
+The acceptance workflow writes `outputs/five_region/diurnal_vs_flat_solver.csv` with regional solver results from both runs. The reproducible CI artifact contains the audit and regional dispatch CSVs. **Do not interpret the shortage-proxy fraction as a forecast of electricity outages.**
+
 ## Verified five-continent 2020 annual dispatch and stress test (November 2026)
 
 [![Five-region acceptance](https://github.com/ys30/lut-to-pypsa/actions/workflows/five-region-acceptance.yml/badge.svg)](https://github.com/ys30/lut-to-pypsa/actions/workflows/five-region-acceptance.yml)
