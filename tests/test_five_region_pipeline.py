@@ -57,3 +57,31 @@ def test_invalid_capacity_factor_fails_before_expanding_hourly_load(tmp_path, fa
     with pytest.raises(ValueError, match="Invalid firm capacity factor"):
         run(source, tmp_path, year=2020, firm_capacity_factor=factor)
     assert not list(tmp_path.iterdir())
+
+
+
+def test_fixed_capacity_reference_is_independent_of_diurnal_peak():
+    """Control isolates load shape by holding assumed firm capacity fixed."""
+    from lut_to_pypsa.hourly import hourly_flat, hourly_diurnal, build_load_network
+    from lut_to_pypsa.benchmark import add_illustrative_supply
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    annual = pd.read_csv(source)
+    flat = hourly_flat(annual, 2020)
+    shaped = hourly_diurnal(annual, 2020, amplitude=0.20)
+    flat_peak = flat.groupby("region").p_set_mw.max()
+    shaped_peak = shaped.groupby("region").p_set_mw.max()
+    assert (shaped_peak > flat_peak).all()
+    network = add_illustrative_supply(build_load_network(shaped), firm_capacity_factor=0.5)
+    for region, peak in flat_peak.items():
+        network.generators.at[f"firm_{region}", "p_nom"] = float(peak) * 1.10 * 0.5
+    for region in flat_peak.index:
+        assert network.generators.at[f"firm_{region}", "p_nom"] == pytest.approx(
+            float(flat_peak[region]) * 1.10 * 0.5)
+        assert network.generators.at[f"firm_{region}", "p_nom"] < float(shaped_peak[region]) * 1.10 * 0.5
+
+
+def test_invalid_capacity_reference_rejected_before_solver(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    with pytest.raises(ValueError, match="Invalid capacity reference"):
+        run(source, tmp_path, capacity_reference="unknown")
+    assert not list(tmp_path.iterdir())
