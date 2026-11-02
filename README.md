@@ -8,6 +8,20 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 **Verification and scientific scope:** [Read the project audit and limitations](docs/VERIFICATION_AND_LIMITATIONS.md), including verified CI, controlled sensitivity results, known confounding, and the boundary between a portfolio demonstration and calibrated empirical research.
 
+## Recruiter quick view — engineering evidence
+
+**Problem:** Translate source-traced annual LUT electricity energy-service demand into auditable hourly PyPSA dispatch inputs without conflating annual energy, hourly power, and modeled outcomes.
+
+**Built:** Python validation and unit conversion; a five-continent, 8,784-hour (leap-year 2020) scenario pipeline; PyPSA/HiGHS optimization; analytical cross-checks; automated GitHub Actions; and CSV/PNG/SVG reporting.
+
+**Verified outcome:** Six controlled full-year synthetic scenarios isolate a **902.402 TWh difference in modeled shortage-proxy generation** between 18:00 and 06:00 assumed supply troughs at 20% demand amplitude, with annual demand and installed firm capacity held constant. **Not observed outages, not calibrated grid reliability.**
+
+**Evidence:** [Latest four-workflow green baseline](https://github.com/ys30/lut-to-pypsa/actions/runs/41405845143) · [Six-scenario figure](docs/figures/amplitude_phase_sensitivity.svg) · [Methods and limitations](docs/VERIFICATION_AND_LIMITATIONS.md) · [Reproducible scenario command](#supply-demand-phase-alignment-verified).
+
+**Project boundary:** This is an energy-model integration and validation demonstration, not a reproduction of the LUT-ESTM optimization or a real-grid outage forecast.
+
+---
+
 ## What it does
 
 - Validates required columns, nulls, unique region/generator IDs, valid region references, nonnegative capacities/costs/demand, timestamps, unique region–snapshot pairs, and complete region coverage.
