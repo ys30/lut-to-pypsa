@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="Verified PyPSA shortage proxy versus synthetic demand amplitude for supply troughs at 06:00 and 18:00">
+<rect width="900" height="540" fill="#fff"/>
+<text x="65" y="44" font-family="Arial,sans-serif" font-size="23" font-weight="bold" fill="#20242a">Demand amplitude × supply timing</text>
+<text x="65" y="70" font-family="Arial,sans-serif" font-size="14" fill="#555">2020 five-region PyPSA, synthetic supply; CI run 41392582624</text>
+<g font-family="Arial,sans-serif" font-size="14" fill="#333">
+<line x1="105" y1="115" x2="105" y2="425" stroke="#444" stroke-width="2"/>
+<line x1="105" y1="425" x2="790" y2="425" stroke="#444" stroke-width="2"/>
+<g stroke="#ddd" stroke-width="1"><line x1="105" y1="385" x2="790" y2="385"/><line x1="105" y1="285" x2="790" y2="285"/><line x1="105" y1="185" x2="790" y2="185"/></g>
+<text x="57" y="390">4,500</text><text x="57" y="290">5,000</text><text x="57" y="190">5,500</text>
+<text x="185" y="450">0%</text><text x="432" y="450">10%</text><text x="680" y="450">20%</text>
+<text x="355" y="490">Synthetic diurnal demand amplitude</text>
+<text transform="translate(22 360) rotate(-90)">Annual shortage proxy (TWh)</text>
+</g>
+<polyline points="200,349.5 450,349.5 700,349.5" fill="none" stroke="#4477aa" stroke-width="4"/>
+<polyline points="200,349.5 450,282.9 700,169.0" fill="none" stroke="#cc6677" stroke-width="4"/>
+<g fill="#4477aa"><circle cx="200" cy="349.5" r="6"/><circle cx="450" cy="349.5" r="6"/><circle cx="700" cy="349.5" r="6"/></g>
+<g fill="#cc6677"><circle cx="200" cy="349.5" r="4"/><circle cx="450" cy="282.9" r="6"/><circle cx="700" cy="169.0" r="6"/></g>
+<g font-family="Arial,sans-serif" font-size="15" fill="#333">
+<line x1="560" y1="102" x2="595" y2="102" stroke="#4477aa" stroke-width="4"/><text x="606" y="107">06:00 supply trough</text>
+<line x1="560" y1="126" x2="595" y2="126" stroke="#cc6677" stroke-width="4"/><text x="606" y="131">18:00 supply trough</text>
+</g>
+<text x="65" y="520" font-family="Arial,sans-serif" font-size="12" fill="#555">Audited full-year model results; not observed outages or calibrated grid reliability.</text>
+</svg>
