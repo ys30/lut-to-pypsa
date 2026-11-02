@@ -336,6 +336,38 @@ jobs:
           print("90%-capacity diurnal shortage TWh:", merged.shortage_generation_mwh_diurnal.sum()/1e6)
           print("90%-capacity shape delta TWh:", merged.shape_delta_twh.sum())
           PY
+      - name: Solve opposite-phase supply trough at 06:00
+        run: |
+          python -m lut_to_pypsa.five_region_pipeline \
+            --annual data/derived/lut_continents_2020_verified.csv \
+            --year 2020 \
+            --load-profile diurnal \
+            --diurnal-amplitude 0.20 \
+            --firm-capacity-factor 0.9 \
+            --capacity-reference flat_reference \
+            --firm-availability-amplitude 0.4 \
+            --availability-trough-hour 6 \
+            --output outputs/five_region_availability40_factor90_trough06
+      - name: Audit supply-load phase shift
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          aligned = pd.read_csv("outputs/five_region_availability40_factor90_diurnal/regional_dispatch_audit.csv")
+          shifted = pd.read_csv("outputs/five_region_availability40_factor90_trough06/regional_dispatch_audit.csv")
+          merged = aligned.merge(shifted, on="region", suffixes=("_trough18", "_trough06"), validate="one_to_one")
+          assert len(merged) == 5
+          assert set(shifted.solver_status) == {"ok"}
+          assert set(shifted.termination_condition) == {"optimal"}
+          assert shifted.max_abs_balance_mw.max() < 1e-5
+          assert (merged.demand_mwh_trough18 - merged.demand_mwh_trough06).abs().max() < 0.01
+          assert (merged.firm_capacity_mw_trough18 - merged.firm_capacity_mw_trough06).abs().max() < 1e-5
+          merged["phase_shift_delta_twh"] = (
+              merged.shortage_generation_mwh_trough06 - merged.shortage_generation_mwh_trough18) / 1e6
+          merged.to_csv("outputs/five_region/availability_phase_shift_control.csv", index=False)
+          print("Trough18 diurnal shortage TWh:", merged.shortage_generation_mwh_trough18.sum()/1e6)
+          print("Trough06 diurnal shortage TWh:", merged.shortage_generation_mwh_trough06.sum()/1e6)
+          print("Phase shift delta TWh:", merged.phase_shift_delta_twh.sum())
+          PY
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
@@ -388,4 +420,5 @@ jobs:
             outputs/five_region_availability40_diurnal/regional_dispatch_audit.csv
             outputs/five_region_availability40_factor90_flat/regional_dispatch_audit.csv
             outputs/five_region_availability40_factor90_diurnal/regional_dispatch_audit.csv
+            outputs/five_region_availability40_factor90_trough06/regional_dispatch_audit.csv
           if-no-files-found: warn
