@@ -463,6 +463,11 @@ jobs:
           print("Amplitude-phase sensitivity TWh:")
           print(out.to_string(index=False))
           PY
+      - name: Verify README SVG scenario values against solved CSV
+        run: |
+          python -m lut_to_pypsa.verify_sensitivity_svg \
+            --csv outputs/five_region/amplitude_phase_sensitivity.csv \
+            --svg docs/figures/amplitude_phase_sensitivity.svg
       - name: Render validated five-region result figures
         run: |
           python -m pip install matplotlib
