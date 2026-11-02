@@ -85,3 +85,21 @@ def test_invalid_capacity_reference_rejected_before_solver(tmp_path):
     with pytest.raises(ValueError, match="Invalid capacity reference"):
         run(source, tmp_path, capacity_reference="unknown")
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("amplitude", [-0.01, 1.0, float("nan"), float("inf")])
+def test_invalid_firm_availability_amplitude_rejected(tmp_path, amplitude):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    with pytest.raises(ValueError, match="Invalid firm availability amplitude"):
+        run(source, tmp_path, firm_availability_amplitude=amplitude)
+    assert not list(tmp_path.iterdir())
+
+
+def test_synthetic_firm_availability_dip_is_bounded():
+    import numpy as np
+    hours = np.arange(24)
+    amplitude = 0.4
+    availability = 1 - amplitude * (1 + np.cos(2 * np.pi * (hours - 18) / 24)) / 2
+    assert availability.min() == pytest.approx(0.6)
+    assert availability.max() == pytest.approx(1.0)
+    assert availability[18] == pytest.approx(0.6)
