@@ -20,6 +20,10 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 This is a **methodological sensitivity test**, not a measured electricity load curve: `hourly_diurnal` uses a daily cosine pattern with default amplitude 0.20 and an illustrative 18:00 peak, preserving each continent's original annual LUT demand. No observed hourly regional demand, generation mix, interconnection, or storage is inferred.
 
+**Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
+
+**Critical interpretation:** `add_illustrative_supply` sizes firm generator capacity as `peak_hourly_load × (1 + reserve_margin) × firm_capacity_factor`. Therefore, the diurnal profile's higher peak **also increases the assumed installed firm capacity** compared with the flat-load case. The reported −24.44% is a **joint load-shape and capacity-resizing effect**, *not* a controlled experiment holding generation capacity constant. A fixed-capacity comparison is required before drawing a load-shape-only conclusion.
+
 Reproduce the two directly comparable full-year stress scenarios:
 
 ```bash
