@@ -22,6 +22,26 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Fixed-capacity control: validated causal decomposition of model assumptions
+
+[Successful full-year PyPSA acceptance run #41386235585](https://github.com/ys30/lut-to-pypsa/actions/runs/41386235585) held the illustrative firm generator capacity constant while changing the hourly demand shape. All three scenarios retain identical LUT annual demand, 50% assumed firm-capacity factor, 10% reserve margin, and 8,784 hourly snapshots.
+
+| Full-year illustrative scenario | Shortage-proxy generation (TWh) |
+| --- | ---: |
+| A. Flat load, capacity based on flat peak | 10,119.445 |
+| B. Synthetic diurnal load, **same firm capacity as A** | 10,119.445 |
+| C. Synthetic diurnal load, capacity resized to diurnal peak | 7,645.803 |
+
+**A → B (load shape only):** effectively **0.000 TWh** (numerical residual less than 10⁻⁹ TWh). **B → C (capacity resizing):** **−2,473.642 TWh**, explaining the entire apparent −24.44% shortage-proxy change in the earlier non-controlled comparison. The result is specific to this unconstrained dispatchable-firm, high-cost-shortage, flat-vs-cosine model: it is not evidence that hourly load shape never matters in realistic systems.
+
+Reproduce the fixed-capacity control:
+
+```bash
+python -m lut_to_pypsa.five_region_pipeline --firm-capacity-factor 0.5 --load-profile diurnal --diurnal-amplitude 0.20 --capacity-reference flat_reference --output outputs/five_region_diurnal_fixed_capacity
+```
+
+The workflow publishes `outputs/five_region/fixed_capacity_diurnal_control.csv` with the five regional paired comparisons and both decomposition terms. This comparison explicitly avoids interpreting modeled shortage-proxy generation as measured electricity outages.
+
 **Critical interpretation:** `add_illustrative_supply` sizes firm generator capacity as `peak_hourly_load × (1 + reserve_margin) × firm_capacity_factor`. Therefore, the diurnal profile's higher peak **also increases the assumed installed firm capacity** compared with the flat-load case. The reported −24.44% is a **joint load-shape and capacity-resizing effect**, *not* a controlled experiment holding generation capacity constant. A fixed-capacity comparison is required before drawing a load-shape-only conclusion.
 
 Reproduce the two directly comparable full-year stress scenarios:
