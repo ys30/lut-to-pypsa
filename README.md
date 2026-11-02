@@ -24,7 +24,7 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 ### Audited demand-amplitude × supply-phase figure
 
-The CI figure generator renders `outputs/figures/five_region_amplitude_phase_sensitivity.png` from the six verified solver scenarios in `outputs/five_region/amplitude_phase_sensitivity.csv`. It validates that all six amplitude/phase combinations are present before plotting. Download the image from the latest successful **Five-region LUT illustrative acceptance** workflow artifact. The figure explicitly identifies the data as illustrative full-year PyPSA solves rather than measured outages.
+The CI figure generator renders `outputs/figures/five_region_amplitude_phase_sensitivity.png` from the six verified solver scenarios in `outputs/five_region/amplitude_phase_sensitivity.csv`. It validates that all six amplitude/phase combinations are present before plotting. [Download the verified figure and CSV results from run #41396036448](https://github.com/ys30/lut-to-pypsa/actions/runs/41396036448/artifacts) (artifact: `five-region-illustrative-results`). The figure is currently a CI artifact rather than a committed image, so the README does not embed a potentially broken relative image link. The figure explicitly identifies the data as illustrative full-year PyPSA solves rather than measured outages.
 
 ### Demand-amplitude × supply-phase interaction (CI verified)
 
