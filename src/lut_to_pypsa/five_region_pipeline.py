@@ -11,9 +11,11 @@ from .regional_dispatch import solve_regional_dispatch
 
 
 def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10, firm_capacity_factor=1.0,
-        load_profile="flat", diurnal_amplitude=0.20):
+        load_profile="flat", diurnal_amplitude=0.20, capacity_reference="profile_peak"):
     if not 0 <= firm_capacity_factor <= 1 or pd.isna(firm_capacity_factor):
         raise ValueError("Invalid firm capacity factor")
+    if capacity_reference not in ("profile_peak", "flat_reference"):
+        raise ValueError("Invalid capacity reference")
     annual = pd.read_csv(annual_csv)
     if load_profile not in ("flat", "diurnal"):
         raise ValueError("Invalid load profile")
@@ -22,12 +24,20 @@ def run(annual_csv, output_dir, *, year=2020, reserve_margin=0.10, firm_capacity
     checks = check_energy_conservation(annual.loc[annual.year.eq(year)], hourly)
     network = add_illustrative_supply(build_load_network(hourly), reserve_margin=reserve_margin,
                                       firm_capacity_factor=firm_capacity_factor)
+    if capacity_reference == "flat_reference":
+        baseline = hourly_flat(annual, year)
+        reference_peak = baseline.groupby("region").p_set_mw.max()
+        for region, peak in reference_peak.items():
+            network.generators.at[f"firm_{region}", "p_nom"] = (
+                float(peak) * (1 + reserve_margin) * firm_capacity_factor)
     solved, report, status, condition = solve_regional_dispatch(network)
     report = report.rename(columns={"bus": "region"})
     report["solver_status"] = status
     report["termination_condition"] = condition
     report["supply_provenance"] = "assumed_firm_and_shortage_generators"
     report["load_profile"] = load_profile
+    report["capacity_reference"] = capacity_reference
+    report["firm_capacity_mw"] = [float(solved.generators.at[f"firm_{region}", "p_nom"]) for region in report.region]
     report["diurnal_amplitude"] = diurnal_amplitude if load_profile == "diurnal" else 0.0
     report["assumed_reserve_margin"] = reserve_margin
     report["assumed_firm_capacity_factor"] = firm_capacity_factor
@@ -70,11 +80,14 @@ def main(argv=None):
     parser.add_argument("--load-profile", choices=("flat", "diurnal"), default="flat",
                         help="Flat or synthetic daily-shaped annual-conserving demand")
     parser.add_argument("--diurnal-amplitude", type=float, default=0.20)
+    parser.add_argument("--capacity-reference", choices=("profile_peak", "flat_reference"),
+                        default="profile_peak", help="Choose profile-dependent or fixed flat-load reference capacity")
     args = parser.parse_args(argv)
     print(run(args.annual, args.output, year=args.year,
               reserve_margin=args.reserve_margin,
               firm_capacity_factor=args.firm_capacity_factor,
-              load_profile=args.load_profile, diurnal_amplitude=args.diurnal_amplitude).to_string(index=False))
+              load_profile=args.load_profile, diurnal_amplitude=args.diurnal_amplitude,
+              capacity_reference=args.capacity_reference).to_string(index=False))
 
 
 if __name__ == "__main__":
