@@ -30,7 +30,26 @@ def verify(csv_path: Path, svg_path: Path) -> None:
     for key, value in expected.items():
         if abs(value - actual[key]) > 0.0005:
             raise ValueError(f"SVG data stale for {key}: {actual[key]} vs {value}")
-    print("Versioned SVG metadata matches six full-year solver scenarios (0.0005 TWh tolerance).")
+    # Verify the visible chart geometry, not only invisible metadata.
+    # The committed SVG maps 0/10/20% to x=200/450/700 and
+    # 4,500/5,000/5,500 TWh to y=385/285/185 respectively.
+    ns = "{http://www.w3.org/2000/svg}"
+    paths = root.findall(f"{ns}polyline")
+    if len(paths) != 2:
+        raise ValueError("Expected exactly two visible scenario polylines")
+    for path, hour in zip(paths, (6, 18)):
+        points = [tuple(map(float, pair.split(",")))
+                  for pair in path.attrib["points"].split()]
+        if len(points) != 3:
+            raise ValueError(f"Expected three points for supply trough {hour}")
+        for (x, y), amplitude in zip(points, (0.0, 0.1, 0.2)):
+            expected_x = 200 + amplitude * 2500
+            expected_y = 385 - (expected[(amplitude, hour)] - 4500) * 0.2
+            if abs(x - expected_x) > 0.1 or abs(y - expected_y) > 0.1:
+                raise ValueError(
+                    f"SVG visible point mismatch at amplitude={amplitude}, "
+                    f"trough={hour}: {(x, y)} vs {(expected_x, expected_y)}")
+    print("Versioned SVG metadata and visible chart coordinates match six full-year solver scenarios.")
 
 
 if __name__ == "__main__":
