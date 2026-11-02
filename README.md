@@ -17,10 +17,25 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 | **Time resolution** | 8,784 one-hour snapshots (leap year 2020) |
 | **Optimization** | Independent-region illustrative electricity dispatch; no interregional transmission or storage |
 | **Engineering checks** | Input provenance, energy conservation, solver optimality, power balance, six-scenario figure-data agreement |
-| **Latest verified CI** | [All four workflows passed at d2677fb](https://github.com/ys30/lut-to-pypsa/actions/runs/41407134912) |
+| **Latest verified CI** | [All four workflows passed at d2677fb](https://github.com/ys30/lut-to-pypsa/actions/runs/41483196560) |
 | **Limitations** | Synthetic hourly profiles and assumed supply; **not** calibrated reliability or observed outages |
 
 **Results preview:** [Annual demand](docs/figures/five_region_annual_demand.svg) · [Illustrative dispatch](docs/figures/five_region_stress50_dispatch.svg) · [Capacity sensitivity](docs/figures/five_region_capacity_sensitivity.svg) · [Timing interaction](docs/figures/amplitude_phase_sensitivity.svg).
+
+## Figure guide — what the four charts mean
+
+These figures demonstrate **engineering validation and controlled synthetic sensitivity**, not observed electricity outages or calibrated grid adequacy. The source-traced LUT 2020 fixture provides **annual electricity energy-service demand**; hourly load shapes and supply constraints are illustrative.
+
+| Figure | Interpretation |
+| --- | --- |
+| [Demand amplitude and supply timing](docs/figures/amplitude_phase_sensitivity.svg) | Synthetic evening demand variation and the assumed supply-availability trough affect modeled unmet demand. Under fixed installed capacity, aligning the trough with evening demand increases the shortage proxy; this is a conditional scenario sensitivity, not observed reliability. |
+| [Annual electricity demand](docs/figures/five_region_annual_demand.svg) | Source-traced 2020 LUT annual electricity energy-service demand for five continents. These annual totals are inputs for energy-conserving hourly profiles, **not measured hourly electricity consumption**. |
+| [Illustrative generation dispatch](docs/figures/five_region_stress50_dispatch.svg) | Full-year PyPSA firm generation and high-cost shortage-proxy dispatch across five isolated continental buses in a synthetic 50%-capacity stress case. This verifies dispatch and energy balance, **not real outages**. |
+| [Firm-capacity sensitivity](docs/figures/five_region_capacity_sensitivity.svg) | Raising the assumed firm-capacity factor from 25% to 100% reduces modeled unmet-demand share from 72.5% to 0%. The near-linear response follows the imposed capacity–demand relationship and serves as a solver/analytical consistency check, **not a calibrated capacity-adequacy prediction**. |
+
+For the research continuation, observed multi-year data, geographic and technology harmonization, and independent-year validation must be established separately before making empirical claims. The research v2.0 repository is private; this v1.0 repository remains the public engineering demonstration.
+
+---
 
 ## Recruiter quick view — engineering evidence
 
@@ -30,7 +45,7 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 **Verified outcome:** Six controlled full-year synthetic scenarios isolate a **902.402 TWh difference in modeled shortage-proxy generation** between 18:00 and 06:00 assumed supply troughs at 20% demand amplitude, with annual demand and installed firm capacity held constant. **Not observed outages, not calibrated grid reliability.**
 
-**Evidence:** [Latest four-workflow green baseline](https://github.com/ys30/lut-to-pypsa/actions/runs/41405845143) · [Six-scenario figure](docs/figures/amplitude_phase_sensitivity.svg) · [Methods and limitations](docs/VERIFICATION_AND_LIMITATIONS.md) · [Reproducible scenario command](#supply-demand-phase-alignment-verified).
+**Evidence:** [Latest four-workflow green baseline](https://github.com/ys30/lut-to-pypsa/actions/runs/41483196560) · [Six-scenario figure](docs/figures/amplitude_phase_sensitivity.svg) · [Methods and limitations](docs/VERIFICATION_AND_LIMITATIONS.md) · [Reproducible scenario command](#supply-demand-phase-alignment-verified).
 
 **Project boundary:** This is an energy-model integration and validation demonstration, not a reproduction of the LUT-ESTM optimization or a real-grid outage forecast.
 
