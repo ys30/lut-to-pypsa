@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="Verified PyPSA shortage proxy versus synthetic demand amplitude for supply troughs at 06:00 and 18:00">
+<metadata id="scenario-data">0,6,4677.432575;0,18,4677.432575;0.1,6,4677.432575;0.1,18,5010.323516;0.2,6,4677.432575;0.2,18,5579.834291</metadata>
 <rect width="900" height="540" fill="#fff"/>
 <text x="65" y="44" font-family="Arial,sans-serif" font-size="23" font-weight="bold" fill="#20242a">Demand amplitude × supply timing</text>
 <text x="65" y="70" font-family="Arial,sans-serif" font-size="14" fill="#555">2020 five-region PyPSA, synthetic supply; CI run 41392582624</text>
