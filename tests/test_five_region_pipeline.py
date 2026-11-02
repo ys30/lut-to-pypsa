@@ -130,3 +130,22 @@ def test_time_varying_firm_availability_changes_dispatch(tmp_path):
         cap = float(solved.generators.at[f"firm_{region}", "p_nom"])
         assert (firm.to_numpy() <= cap * availability + 1e-5).all()
         assert solved.generators_t.p[f"shortage_{region}"].max() > 0
+
+
+
+@pytest.mark.parametrize("hour", [-1, 24, 1.5, "18", None])
+def test_invalid_availability_trough_hour_rejected(tmp_path, hour):
+    source = Path(__file__).resolve().parents[1] / "data/derived/lut_continents_2020_verified.csv"
+    with pytest.raises(ValueError, match="Invalid availability trough hour"):
+        run(source, tmp_path, availability_trough_hour=hour)
+    assert not list(tmp_path.iterdir())
+
+
+def test_availability_trough_phase_shift():
+    import numpy as np
+    hours = np.arange(24)
+    for trough in (0, 6, 12, 18):
+        availability = 1 - 0.4 * (1 + np.cos(
+            2 * np.pi * (hours - trough) / 24)) / 2
+        assert int(np.argmin(availability)) == trough
+        assert availability[trough] == pytest.approx(0.6)
