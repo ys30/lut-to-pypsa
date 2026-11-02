@@ -49,7 +49,23 @@ def verify(csv_path: Path, svg_path: Path) -> None:
                 raise ValueError(
                     f"SVG visible point mismatch at amplitude={amplitude}, "
                     f"trough={hour}: {(x, y)} vs {(expected_x, expected_y)}")
-    print("Versioned SVG metadata and visible chart coordinates match six full-year solver scenarios.")
+    # The plotted circles must also agree with the line vertices.
+    # This catches a stale or displaced marker even when the line is correct.
+    circles = root.findall(f".//{ns}circle")
+    if len(circles) != 6:
+        raise ValueError(f"Expected six visible SVG point markers, got {len(circles)}")
+    for i, hour in enumerate((6, 18)):
+        for j, amplitude in enumerate((0.0, 0.1, 0.2)):
+            marker = circles[i * 3 + j]
+            actual_x = float(marker.attrib["cx"])
+            actual_y = float(marker.attrib["cy"])
+            expected_x = 200 + amplitude * 2500
+            expected_y = 385 - (expected[(amplitude, hour)] - 4500) * 0.2
+            if abs(actual_x - expected_x) > 0.1 or abs(actual_y - expected_y) > 0.1:
+                raise ValueError(
+                    f"SVG marker mismatch at amplitude={amplitude}, trough={hour}: "
+                    f"{(actual_x, actual_y)} vs {(expected_x, expected_y)}")
+    print("Versioned SVG metadata and visible lines and markers match six full-year solver scenarios.")
 
 
 if __name__ == "__main__":
