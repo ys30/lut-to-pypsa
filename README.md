@@ -8,6 +8,20 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 **Verification and scientific scope:** [Read the project audit and limitations](docs/VERIFICATION_AND_LIMITATIONS.md), including verified CI, controlled sensitivity results, known confounding, and the boundary between a portfolio demonstration and calibrated empirical research.
 
+## At a glance
+
+| Dimension | Verified implementation |
+| --- | --- |
+| **Stack** | Python, pandas, PyPSA, HiGHS, matplotlib, pytest, GitHub Actions |
+| **Input** | Source-cell-traced LUT-DEMAND 2020 annual energy-service-demand fixture, five continents |
+| **Time resolution** | 8,784 one-hour snapshots (leap year 2020) |
+| **Optimization** | Independent-region illustrative electricity dispatch; no interregional transmission or storage |
+| **Engineering checks** | Input provenance, energy conservation, solver optimality, power balance, six-scenario figure-data agreement |
+| **Latest verified CI** | [All four workflows passed at d2677fb](https://github.com/ys30/lut-to-pypsa/actions/runs/41407134912) |
+| **Limitations** | Synthetic hourly profiles and assumed supply; **not** calibrated reliability or observed outages |
+
+**Results preview:** [Annual demand](docs/figures/five_region_annual_demand.svg) · [Illustrative dispatch](docs/figures/five_region_stress50_dispatch.svg) · [Capacity sensitivity](docs/figures/five_region_capacity_sensitivity.svg) · [Timing interaction](docs/figures/amplitude_phase_sensitivity.svg).
+
 ## Recruiter quick view — engineering evidence
 
 **Problem:** Translate source-traced annual LUT electricity energy-service demand into auditable hourly PyPSA dispatch inputs without conflating annual energy, hourly power, and modeled outcomes.
