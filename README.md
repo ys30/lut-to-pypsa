@@ -22,6 +22,23 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Supply-demand phase alignment (verified)
+
+[Five-region acceptance run #41389704952](https://github.com/ys30/lut-to-pypsa/actions/runs/41389704952) verified a controlled 8,784-hour phase-shift experiment at assumed firm-capacity factor 0.90, synthetic 20% diurnal demand amplitude, and synthetic 40% supply-availability dip. Both scenarios retain the same annual demand, installed capacities, hourly demand series, and daily availability distribution; only the hour of the synthetic supply trough changes.
+
+| Synthetic supply trough | Demand peak | Shortage proxy (TWh) |
+| --- | --- | ---: |
+| 18:00 (aligned) | 18:00 | 5,579.834 |
+| 06:00 (opposite phase) | 18:00 | 4,677.433 |
+
+Moving the assumed supply trough to 06:00 reduces the shortage proxy by **902.402 TWh (16.17% relative to the aligned case)**. This is a sensitivity of the illustrative dispatch model to imposed daily phase alignment, **not** a measured grid reliability benefit or an estimate of real-world outages. The workflow exports `outputs/five_region/availability_phase_shift_control.csv` with per-region deltas and checks identical annual demand and installed capacity.
+
+Reproduce the opposite-phase case:
+
+```bash
+python -m lut_to_pypsa.five_region_pipeline --annual data/derived/lut_continents_2020_verified.csv --year 2020 --load-profile diurnal --diurnal-amplitude 0.20 --firm-capacity-factor 0.9 --capacity-reference flat_reference --firm-availability-amplitude 0.4 --availability-trough-hour 6 --output outputs/five_region_availability40_factor90_trough06
+```
+
 ### Time-varying supply and load-timing sensitivity (verified)
 
 [Full-year five-region acceptance run #41388435458](https://github.com/ys30/lut-to-pypsa/actions/runs/41388435458) solved two additional fixed-nameplate scenarios with an illustrative 18:00 firm-availability dip (amplitude 0.4; minimum availability 60%). Both use the same source-traced 2020 LUT annual demand, 8,784 hours, identical installed firm capacities, and identical hour-by-hour availability constraints.
