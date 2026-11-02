@@ -207,7 +207,25 @@ jobs:
           assert (merged.demand_mwh_flat - merged.demand_mwh_diurnal).abs().max() < 0.01
           assert (merged.shortage_fraction_diurnal >= 0).all()
           assert (merged.shortage_fraction_diurnal <= 1).all()
+          merged["shortage_delta_percentage_points"] = 100 * (
+              merged.shortage_fraction_diurnal - merged.shortage_fraction_flat)
+          merged["shortage_delta_twh"] = (
+              merged.shortage_generation_mwh_diurnal - merged.shortage_generation_mwh_flat) / 1e6
+          assert merged.shortage_delta_percentage_points.notna().all()
+          assert merged.shortage_delta_twh.notna().all()
           merged.to_csv("outputs/five_region/diurnal_vs_flat_solver.csv", index=False)
+          total_flat = merged.shortage_generation_mwh_flat.sum() / 1e6
+          total_diurnal = merged.shortage_generation_mwh_diurnal.sum() / 1e6
+          with open("outputs/five_region/diurnal_sensitivity_summary.md", "w", encoding="utf-8") as f:
+              f.write("# Illustrative diurnal versus flat full-year dispatch\\n\\n")
+              f.write("Both cases use the same source-traced LUT annual demand, 50% assumed firm capacity factor, and 10% reserve margin.\\n\\n")
+              f.write(f"Flat shortage proxy: {total_flat:,.3f} TWh\\n\\n")
+              f.write(f"Diurnal shortage proxy: {total_diurnal:,.3f} TWh\\n\\n")
+              f.write(f"Change: {total_diurnal-total_flat:+,.3f} TWh\\n\\n")
+              f.write("This is an illustrative optimization sensitivity, not observed outages or empirical calibration.\\n")
+          print("Flat shortage proxy TWh:", total_flat)
+          print("Diurnal shortage proxy TWh:", total_diurnal)
+          print("Delta TWh:", total_diurnal-total_flat)
           print(merged[["region", "shortage_fraction_flat", "shortage_fraction_diurnal"]].to_string(index=False))
           PY
       - name: Render validated five-region result figures
