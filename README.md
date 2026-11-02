@@ -22,6 +22,20 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Demand-amplitude × supply-phase interaction (CI verified)
+
+[Full-year five-region acceptance run #41392582624](https://github.com/ys30/lut-to-pypsa/actions/runs/41392582624) verified six 8,784-hour PyPSA solves at fixed installed capacity (assumed firm-capacity factor 0.90), synthetic supply-availability dip amplitude 0.40, and the same source-traced 2020 annual demand. The demand diurnal amplitude varies while the synthetic supply trough occurs at either 06:00 or 18:00.
+
+| Synthetic demand amplitude | 06:00 supply trough (TWh) | 18:00 supply trough (TWh) | Aligned-minus-opposite (TWh) |
+| --- | ---: | ---: | ---: |
+| 0% | 4,677.433 | 4,677.433 | 0 |
+| 10% | 4,677.433 | 5,010.324 | +332.891 |
+| 20% | 4,677.433 | 5,579.834 | +902.402 |
+
+At zero demand amplitude, changing the availability trough hour has no effect, as expected. With stronger synthetic evening demand peaks, aligning the imposed supply trough at 18:00 increases the shortage proxy, whereas the opposite-phase scenarios remain unchanged in this particular capacity regime. The relationship is **conditional on the model's binding capacity constraints** and is not an empirical forecast or a universal monotonicity claim.
+
+CI checks equal annual demand and installed capacity across all six scenarios, optimal solver termination, and hourly power balance. The audited table is exported as `outputs/five_region/amplitude_phase_sensitivity.csv`.
+
 ### Four-phase availability sensitivity (CI verified)
 
 The [five-region acceptance run #41391314480](https://github.com/ys30/lut-to-pypsa/actions/runs/41391314480) solved four 8,784-hour cases with the **same** 2020 source-traced annual demand, synthetic demand peak at 18:00, firm-capacity factor 0.90, fixed installed capacity, and a 40% synthetic availability dip. Only the availability trough hour changes.
