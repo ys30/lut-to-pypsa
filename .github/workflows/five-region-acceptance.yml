@@ -463,6 +463,11 @@ jobs:
           print("Amplitude-phase sensitivity TWh:")
           print(out.to_string(index=False))
           PY
+      - name: Verify stacked stress SVG against solved regional dispatch
+        run: |
+          python -m lut_to_pypsa.verify_stress_svg \
+            --csv outputs/five_region_stress50/regional_dispatch_audit.csv \
+            --svg docs/figures/five_region_stress50_dispatch.svg
       - name: Verify annual-demand SVG labels and bars against LUT fixture
         run: |
           python -m lut_to_pypsa.verify_annual_demand_svg \
