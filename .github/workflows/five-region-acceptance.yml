@@ -463,6 +463,11 @@ jobs:
           print("Amplitude-phase sensitivity TWh:")
           print(out.to_string(index=False))
           PY
+      - name: Verify annual-demand SVG labels and bars against LUT fixture
+        run: |
+          python -m lut_to_pypsa.verify_annual_demand_svg \
+            --csv data/derived/lut_continents_2020_verified.csv \
+            --svg docs/figures/five_region_annual_demand.svg
       - name: Verify README SVG scenario values against solved CSV
         run: |
           python -m lut_to_pypsa.verify_sensitivity_svg \
