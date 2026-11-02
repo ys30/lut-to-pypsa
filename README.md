@@ -33,7 +33,7 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 ![Verified synthetic demand-amplitude by supply-phase sensitivity](docs/figures/amplitude_phase_sensitivity.svg)
 
-The versioned SVG above visualizes the **CI-verified** six-scenario results (run [#41392582624](https://github.com/ys30/lut-to-pypsa/actions/runs/41392582624)). The SVG uses the verified rounded totals, while the pipeline-generated PNG and CSV preserve the full-precision solver outputs.
+The versioned SVG above visualizes the **CI-verified** six-scenario results (run [#41392582624](https://github.com/ys30/lut-to-pypsa/actions/runs/41392582624)). The SVG uses the verified rounded totals, while the pipeline-generated PNG and CSV preserve the full-precision solver outputs. **CI now verifies the SVG's machine-readable six-scenario values against the newly solved CSV**, failing if any value drifts beyond 0.0005 TWh ([verified run #41401392555](https://github.com/ys30/lut-to-pypsa/actions/runs/41401392555)).
 
 
 
