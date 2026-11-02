@@ -20,7 +20,7 @@ A small, reproducible **electricity-only** portfolio project demonstrating how t
 
 This is a **methodological sensitivity test**, not a measured electricity load curve: `hourly_diurnal` uses a daily cosine pattern with default amplitude 0.20 and an illustrative 18:00 peak, preserving each continent's original annual LUT demand. No observed hourly regional demand, generation mix, interconnection, or storage is inferred.
 
-**Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
+**Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages. **Important confounding caveat:** this initial comparison also changed installed firm capacity because each scenario resized the assumed generator to its own hourly peak; the −24.44% change is **not** a load-shape-only effect. The subsequent fixed-capacity control recovered the same 10,119.445 TWh shortage proxy for flat and diurnal demand (difference below numerical tolerance). Only the later fixed-capacity time-varying-availability experiments isolate a conditional timing effect.
 
 ### Audited demand-amplitude × supply-phase figure
 
@@ -30,7 +30,7 @@ The versioned SVG above visualizes the **CI-verified** six-scenario results (run
 
 
 
-The CI figure generator renders `outputs/figures/five_region_amplitude_phase_sensitivity.png` from the six verified solver scenarios in `outputs/five_region/amplitude_phase_sensitivity.csv`. It validates that all six amplitude/phase combinations are present before plotting. [Download the verified figure and CSV results from run #41396036448](https://github.com/ys30/lut-to-pypsa/actions/runs/41396036448/artifacts) (artifact: `five-region-illustrative-results`). The figure is currently a CI artifact rather than a committed image, so the README does not embed a potentially broken relative image link. The figure explicitly identifies the data as illustrative full-year PyPSA solves rather than measured outages.
+The CI figure generator renders `outputs/figures/five_region_amplitude_phase_sensitivity.png` from the six verified solver scenarios in `outputs/five_region/amplitude_phase_sensitivity.csv`. It validates that all six amplitude/phase combinations are present before plotting. [Download the verified figure and CSV results from run #41396036448](https://github.com/ys30/lut-to-pypsa/actions/runs/41396036448/artifacts) (artifact: `five-region-illustrative-results`). A versioned SVG is embedded above for immediate viewing; the CI artifact contains the generated full-precision PNG and CSV for independent verification. The figure explicitly identifies the data as illustrative full-year PyPSA solves rather than measured outages.
 
 ### Demand-amplitude × supply-phase interaction (CI verified)
 
