@@ -22,6 +22,10 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Audited demand-amplitude × supply-phase figure
+
+The CI figure generator renders `outputs/figures/five_region_amplitude_phase_sensitivity.png` from the six verified solver scenarios in `outputs/five_region/amplitude_phase_sensitivity.csv`. It validates that all six amplitude/phase combinations are present before plotting. Download the image from the latest successful **Five-region LUT illustrative acceptance** workflow artifact. The figure explicitly identifies the data as illustrative full-year PyPSA solves rather than measured outages.
+
 ### Demand-amplitude × supply-phase interaction (CI verified)
 
 [Full-year five-region acceptance run #41392582624](https://github.com/ys30/lut-to-pypsa/actions/runs/41392582624) verified six 8,784-hour PyPSA solves at fixed installed capacity (assumed firm-capacity factor 0.90), synthetic supply-availability dip amplitude 0.40, and the same source-traced 2020 annual demand. The demand diurnal amplitude varies while the synthetic supply trough occurs at either 06:00 or 18:00.
