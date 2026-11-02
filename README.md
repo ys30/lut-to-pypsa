@@ -22,6 +22,21 @@ This is a **methodological sensitivity test**, not a measured electricity load c
 
 **Verified numerical comparison (run #41385598796):** flat-load shortage proxy **10,119.445 TWh**; synthetic-diurnal shortage proxy **7,645.803 TWh**; difference **−2,473.642 TWh** (−24.44% relative to the flat case). These are actual solved annual totals under the stated assumptions, not measured power-system shortages.
 
+### Four-phase availability sensitivity (CI verified)
+
+The [five-region acceptance run #41391314480](https://github.com/ys30/lut-to-pypsa/actions/runs/41391314480) solved four 8,784-hour cases with the **same** 2020 source-traced annual demand, synthetic demand peak at 18:00, firm-capacity factor 0.90, fixed installed capacity, and a 40% synthetic availability dip. Only the availability trough hour changes.
+
+| Availability trough hour | Annual shortage proxy (TWh) | Change relative to 18:00 (TWh) |
+| --- | ---: | ---: |
+| 00:00 | 4,932.813 | −647.022 |
+| 06:00 | 4,677.433 | −902.402 |
+| 12:00 | 4,932.813 | −647.022 |
+| 18:00 | 5,579.834 | 0 |
+
+The imposed 18:00 demand peak and 18:00 supply trough produce the largest shortage proxy. Moving the supply trough 12 hours earlier gives the smallest. The symmetric 00:00/12:00 values are consistent with the symmetric synthetic daily profiles. The audited CSV `outputs/five_region/availability_four_phase_sensitivity.csv` is included in the CI artifacts and job summary.
+
+**Interpretation:** This is a controlled sensitivity experiment on synthetic time profiles. It is not an estimate of real-world outages, and these four illustrative phases alone do not establish empirical robustness.
+
 ### Supply-demand phase alignment (verified)
 
 [Five-region acceptance run #41389704952](https://github.com/ys30/lut-to-pypsa/actions/runs/41389704952) verified a controlled 8,784-hour phase-shift experiment at assumed firm-capacity factor 0.90, synthetic 20% diurnal demand amplitude, and synthetic 40% supply-availability dip. Both scenarios retain the same annual demand, installed capacities, hourly demand series, and daily availability distribution; only the hour of the synthetic supply trough changes.
