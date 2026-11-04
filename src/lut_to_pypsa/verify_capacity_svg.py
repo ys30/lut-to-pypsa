@@ -33,7 +33,7 @@ def verify(csv_path: Path, svg_path: Path) -> None:
         raise ValueError("Expected four plotted capacity points")
     for i, factor in enumerate(factors):
         expected_x = 105 + i * 240
-        expected_y = 370 - percentages[factor] * 3.75
+        expected_y = 370 - percentages[factor] * 3.15
         x, y = points[i]
         marker = circles[i]
         if (abs(x - expected_x) > 0.11 or abs(y - expected_y) > 0.11
